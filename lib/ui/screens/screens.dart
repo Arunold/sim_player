@@ -6,3 +6,5 @@ export 'queue_screen.dart';
 export 'search_screen.dart';
 export 'settings_screen.dart';
 export 'splash_screen.dart';
+export 'songs_list_screen.dart';
+export 'browse_screen.dart';

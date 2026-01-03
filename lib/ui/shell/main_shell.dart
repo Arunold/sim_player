@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:sim_player/core/constants/app_constants.dart';
 import '../../core/constants/theme_constants.dart';
 import '../../core/routes/app_routes.dart';
 import '../../providers/providers.dart';
@@ -41,10 +42,15 @@ class _ShellWrapperState extends ConsumerState<ShellWrapper> {
                 title: AppRoutes.getTitle(widget.route),
                 showProfile: showProfile,
               ),
+
               // Scanning indicator
               ScanningIndicator(fileScanner: fileScanner),
+
               // Screen content - full height, scrollable content handles its own bottom padding
               Expanded(child: widget.child),
+
+              // Bottom padding for mini player
+              const SizedBox(height: AppConstants.miniPlayerHeight + 10),
             ],
           ),
           // Mini player overlay at bottom

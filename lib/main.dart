@@ -5,12 +5,11 @@ import 'package:hive_flutter/hive_flutter.dart';
 
 import 'core/routes/app_routes.dart';
 import 'core/theme/app_theme.dart';
-import 'data/models/song.dart';
 import 'data/models/playlist.dart';
+import 'data/models/song.dart';
 import 'providers/providers.dart';
 import 'ui/screens/screens.dart';
 import 'ui/shell/main_shell.dart';
-import 'ui/screens/splash_screen.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();

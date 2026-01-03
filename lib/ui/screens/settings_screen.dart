@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
 import '../../core/constants/theme_constants.dart';
 import '../../core/routes/app_routes.dart';
 import '../../providers/providers.dart';
@@ -69,7 +70,6 @@ class SettingsScreen extends ConsumerWidget {
             subtitle: 'Version 1.0.0',
             onTap: () => _showAboutDialog(context),
           ),
-          const SizedBox(height: 32),
         ],
       ),
     );

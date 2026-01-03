@@ -1,389 +1,374 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
 import '../../core/constants/theme_constants.dart';
+import '../../data/models/library_category.dart';
+import '../../data/models/song.dart';
 import '../../providers/providers.dart';
 import '../widgets/widgets.dart';
+import 'browse_screen.dart';
+import 'songs_list_screen.dart';
 
-/// Library screen showing all songs, with scan functionality
-class LibraryScreen extends ConsumerStatefulWidget {
+/// Provider to track if library is in grid or list view mode
+final libraryViewModeProvider = StateProvider<bool>((ref) => true);
+
+/// Library screen with category-based navigation
+class LibraryScreen extends ConsumerWidget {
   const LibraryScreen({super.key});
 
   @override
-  ConsumerState<LibraryScreen> createState() => _LibraryScreenState();
-}
-
-class _LibraryScreenState extends ConsumerState<LibraryScreen>
-    with SingleTickerProviderStateMixin {
-  late TabController _tabController;
-
-  @override
-  void initState() {
-    super.initState();
-    _tabController = TabController(length: 4, vsync: this);
-  }
-
-  @override
-  void dispose() {
-    _tabController.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final songsAsync = ref.watch(songsProvider);
+    final playlistsAsync = ref.watch(playlistsProvider);
     final artists = ref.watch(artistsProvider);
     final albums = ref.watch(albumsProvider);
-    final audioController = ref.read(audioControllerProvider);
+    final genres = ref.watch(genresProvider);
+    final years = ref.watch(yearsProvider);
+    final favorites = ref.watch(favoriteSongsProvider);
+    final recentlyAdded = ref.watch(recentlyAddedProvider);
+    final recentlyPlayed = ref.watch(recentlyPlayedProvider);
+    final isGridView = ref.watch(libraryViewModeProvider);
 
-    return Column(
-      children: [
-        // Tab bar
-        TabBar(
-          controller: _tabController,
-          tabs: const [
-            Tab(text: 'All Songs'),
-            Tab(text: 'Artists'),
-            Tab(text: 'Albums'),
-            Tab(text: 'Favorites'),
-          ],
-          indicatorColor: context.colors.primary,
-          labelColor: context.colors.primary,
-          unselectedLabelColor: context.colors.textSecondary,
-        ),
-        // Tab content
-        Expanded(
-          child: TabBarView(
-            controller: _tabController,
-            children: [
-              // All Songs tab
-              songsAsync.when(
-                data: (songs) {
-                  if (songs.isEmpty) {
-                    return _buildEmptyState(
-                      icon: Icons.music_note_rounded,
-                      message: 'No songs found',
-                      action: 'Scan a folder to add music',
-                    );
-                  }
-                  return ListView.builder(
-                    padding: const EdgeInsets.only(bottom: 80),
-                    itemCount: songs.length,
-                    itemBuilder: (context, index) {
-                      final song = songs[index];
-                      return SongTile(
-                        song: song,
-                        onTap: () =>
-                            audioController.playSongs(songs, startIndex: index),
-                      );
-                    },
-                  );
-                },
-                loading: () => const Center(child: CircularProgressIndicator()),
-                error: (e, _) => Center(child: Text('Error: $e')),
-              ),
-              // Artists tab
-              _buildArtistsList(artists),
-              // Albums tab
-              _buildAlbumsList(albums),
-              // Favorites tab
-              _buildFavoritesList(),
-            ],
+    final totalSongs = songsAsync.when(
+      data: (songs) => songs.length,
+      loading: () => 0,
+      error: (_, __) => 0,
+    );
+
+    final playlistCount = playlistsAsync.when(
+      data: (playlists) => playlists.length,
+      loading: () => 0,
+      error: (_, __) => 0,
+    );
+
+    // Build counts map for subtitles
+    final counts = {
+      LibraryCategory.allSongs: totalSongs,
+      LibraryCategory.playlists: playlistCount,
+      LibraryCategory.artists: artists.length,
+      LibraryCategory.albums: albums.length,
+      LibraryCategory.genres: genres.length,
+      LibraryCategory.years: years.length,
+      LibraryCategory.favorites: favorites.length,
+      LibraryCategory.recentlyAdded: recentlyAdded.length,
+      LibraryCategory.recentlyPlayed: recentlyPlayed.length,
+    };
+
+    // Main categories (first 7)
+    final mainCategories = LibraryCategory.values
+        .where(
+          (c) =>
+              c != LibraryCategory.favorites &&
+              c != LibraryCategory.recentlyAdded &&
+              c != LibraryCategory.recentlyPlayed,
+        )
+        .toList();
+
+    // Activity categories (last 2)
+    final activityCategories = [
+      LibraryCategory.favorites,
+      LibraryCategory.recentlyAdded,
+      LibraryCategory.recentlyPlayed,
+    ];
+
+    return CustomScrollView(
+      slivers: [
+        // Header with toggle button
+        SliverToBoxAdapter(
+          child: Padding(
+            padding: const EdgeInsets.all(ThemeConstants.spacingLg),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Your Library',
+                        style: Theme.of(context).textTheme.headlineMedium
+                            ?.copyWith(fontWeight: FontWeight.bold),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        '$totalSongs songs in your collection',
+                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          color: context.colors.textSecondary,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                // Grid/List toggle button
+                IconButton(
+                  onPressed: () {
+                    ref.read(libraryViewModeProvider.notifier).state =
+                        !isGridView;
+                  },
+                  icon: Icon(
+                    isGridView
+                        ? Icons.view_list_rounded
+                        : Icons.grid_view_rounded,
+                    color: context.colors.primary,
+                  ),
+                  style: IconButton.styleFrom(
+                    backgroundColor: context.colors.primary.withValues(
+                      alpha: 0.1,
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
+
+        // Main Categories - Grid or List view based on toggle
+        if (isGridView)
+          _buildGridView(context, ref, mainCategories, counts)
+        else
+          _buildListView(context, ref, mainCategories, counts),
+
+        // Activity section header
+        SliverToBoxAdapter(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(
+              ThemeConstants.spacingLg,
+              ThemeConstants.spacingLg,
+              ThemeConstants.spacingLg,
+              ThemeConstants.spacingSm,
+            ),
+            child: Text(
+              'ACTIVITY',
+              style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                color: context.colors.textSecondary,
+                fontWeight: FontWeight.w600,
+                letterSpacing: 1.2,
+              ),
+            ),
+          ),
+        ),
+
+        // Activity categories - Grid or List view based on toggle
+        if (isGridView)
+          _buildGridView(context, ref, activityCategories, counts)
+        else
+          _buildListView(context, ref, activityCategories, counts),
       ],
     );
   }
 
-  Widget _buildEmptyState({
-    required IconData icon,
-    required String message,
-    required String action,
-  }) {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(
-            icon,
-            size: 64,
-            color: context.colors.textSecondary.withValues(alpha: 0.3),
-          ),
-          const SizedBox(height: 16),
-          Text(
-            message,
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-              color: context.colors.textSecondary,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(action, style: Theme.of(context).textTheme.bodySmall),
-        ],
-      ),
-    );
-  }
+  Widget _buildGridView(
+    BuildContext context,
+    WidgetRef ref,
+    List<LibraryCategory> categories,
+    Map<LibraryCategory, int> counts,
+  ) {
+    return SliverPadding(
+      padding: const EdgeInsets.symmetric(horizontal: ThemeConstants.spacingLg),
+      sliver: SliverGrid(
+        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: 2,
+          mainAxisSpacing: ThemeConstants.spacingMd,
+          crossAxisSpacing: ThemeConstants.spacingMd,
+          childAspectRatio: 1.3,
+        ),
+        delegate: SliverChildListDelegate(
+          categories.map((category) {
+            final config = CategoryConfig.get(category);
+            final count = counts[category] ?? 0;
 
-  Widget _buildArtistsList(List<String> artists) {
-    if (artists.isEmpty) {
-      return _buildEmptyState(
-        icon: Icons.person_rounded,
-        message: 'No artists found',
-        action: 'Scan a folder to add music',
-      );
-    }
-
-    return ListView.builder(
-      padding: const EdgeInsets.only(bottom: 80),
-      itemCount: artists.length,
-      itemBuilder: (context, index) {
-        final artist = artists[index];
-        final songCount = ref.watch(songsByArtistProvider(artist)).length;
-
-        return ListTile(
-          leading: CircleAvatar(
-            backgroundColor: context.colors.card,
-            child: Text(
-              artist[0].toUpperCase(),
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-                color: context.colors.primary,
+            return GradientCard(
+              icon: config.icon,
+              customIcon: Container(
+                width: 70,
+                height: 70,
+                decoration: BoxDecoration(
+                  color: config.color.withValues(alpha: 0.2),
+                  borderRadius: BorderRadius.circular(ThemeConstants.radiusMd),
+                ),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(ThemeConstants.radiusMd),
+                  child: Icon(config.icon, color: config.color, size: 28),
+                ),
               ),
-            ),
-          ),
-          title: Text(artist),
-          subtitle: Text('$songCount song${songCount != 1 ? 's' : ''}'),
-          trailing: const Icon(Icons.chevron_right_rounded),
-          onTap: () => _showArtistSongs(context, artist),
-        );
-      },
-    );
-  }
-
-  Widget _buildAlbumsList(List<String> albums) {
-    if (albums.isEmpty) {
-      return _buildEmptyState(
-        icon: Icons.album_rounded,
-        message: 'No albums found',
-        action: 'Scan a folder to add music',
-      );
-    }
-
-    return ListView.builder(
-      padding: const EdgeInsets.only(bottom: 80),
-      itemCount: albums.length,
-      itemBuilder: (context, index) {
-        final album = albums[index];
-        final songs = ref.watch(songsByAlbumProvider(album));
-        final artist = songs.isNotEmpty ? songs.first.artist : '';
-
-        return ListTile(
-          leading: Container(
-            width: 48,
-            height: 48,
-            decoration: BoxDecoration(
-              color: context.colors.card,
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Icon(Icons.album_rounded, color: context.colors.primary),
-          ),
-          title: Text(album, maxLines: 1, overflow: TextOverflow.ellipsis),
-          subtitle: Text(
-            '$artist • ${songs.length} song${songs.length != 1 ? 's' : ''}',
-          ),
-          trailing: const Icon(Icons.chevron_right_rounded),
-          onTap: () => _showAlbumSongs(context, album),
-        );
-      },
-    );
-  }
-
-  Widget _buildFavoritesList() {
-    final favorites = ref.watch(favoriteSongsProvider);
-    final audioController = ref.read(audioControllerProvider);
-
-    if (favorites.isEmpty) {
-      return _buildEmptyState(
-        icon: Icons.favorite_rounded,
-        message: 'No favorites yet',
-        action: 'Tap the heart icon on songs to add them',
-      );
-    }
-
-    return ListView.builder(
-      padding: const EdgeInsets.only(bottom: 80),
-      itemCount: favorites.length,
-      itemBuilder: (context, index) {
-        final song = favorites[index];
-        return SongTile(
-          song: song,
-          onTap: () => audioController.playSongs(favorites, startIndex: index),
-        );
-      },
-    );
-  }
-
-  void _showArtistSongs(BuildContext context, String artist) {
-    final songs = ref.read(songsByArtistProvider(artist));
-    final audioController = ref.read(audioControllerProvider);
-
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      builder: (context) => DraggableScrollableSheet(
-        initialChildSize: 0.7,
-        maxChildSize: 0.9,
-        minChildSize: 0.5,
-        expand: false,
-        builder: (context, scrollController) => Column(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(ThemeConstants.spacingMd),
-              child: Row(
-                children: [
-                  CircleAvatar(
-                    backgroundColor: context.colors.primary,
-                    radius: 24,
-                    child: Text(
-                      artist[0].toUpperCase(),
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 20,
-                        color: context.colors.textPrimary,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          artist,
-                          style: Theme.of(context).textTheme.titleLarge,
-                        ),
-                        Text(
-                          '${songs.length} song${songs.length != 1 ? 's' : ''}',
-                          style: Theme.of(context).textTheme.bodySmall,
-                        ),
-                      ],
-                    ),
-                  ),
-                  IconButton(
-                    icon: const Icon(Icons.play_circle_filled_rounded),
-                    iconSize: 48,
-                    color: context.colors.primary,
-                    onPressed: () {
-                      Navigator.pop(context);
-                      audioController.playSongs(songs);
-                    },
-                  ),
-                ],
-              ),
-            ),
-            const Divider(),
-            Expanded(
-              child: ListView.builder(
-                controller: scrollController,
-                itemCount: songs.length,
-                itemBuilder: (context, index) {
-                  final song = songs[index];
-                  return SongTile(
-                    song: song,
-                    onTap: () {
-                      Navigator.pop(context);
-                      audioController.playSongs(songs, startIndex: index);
-                    },
-                  );
-                },
-              ),
-            ),
-          ],
+              title: config.title,
+              subtitle: _getSubtitle(category, count),
+              color: config.color,
+              onTap: () => _navigateToCategory(context, ref, category, counts),
+            );
+          }).toList(),
         ),
       ),
     );
   }
 
-  void _showAlbumSongs(BuildContext context, String album) {
-    final songs = ref.read(songsByAlbumProvider(album));
-    final audioController = ref.read(audioControllerProvider);
-    final artist = songs.isNotEmpty ? songs.first.artist : '';
+  Widget _buildListView(
+    BuildContext context,
+    WidgetRef ref,
+    List<LibraryCategory> categories,
+    Map<LibraryCategory, int> counts,
+  ) {
+    return SliverPadding(
+      padding: const EdgeInsets.symmetric(horizontal: ThemeConstants.spacingLg),
+      sliver: SliverList(
+        delegate: SliverChildBuilderDelegate((context, index) {
+          final category = categories[index];
+          final config = CategoryConfig.get(category);
+          final count = counts[category] ?? 0;
 
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      builder: (context) => DraggableScrollableSheet(
-        initialChildSize: 0.7,
-        maxChildSize: 0.9,
-        minChildSize: 0.5,
-        expand: false,
-        builder: (context, scrollController) => Column(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(ThemeConstants.spacingMd),
-              child: Row(
-                children: [
-                  Container(
-                    width: 56,
-                    height: 56,
-                    decoration: BoxDecoration(
-                      color: context.colors.card,
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Icon(
-                      Icons.album_rounded,
-                      color: context.colors.primary,
-                      size: 32,
-                    ),
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          album,
-                          style: Theme.of(context).textTheme.titleLarge,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        Text(
-                          '$artist • ${songs.length} song${songs.length != 1 ? 's' : ''}',
-                          style: Theme.of(context).textTheme.bodySmall,
-                        ),
-                      ],
-                    ),
-                  ),
-                  IconButton(
-                    icon: Icon(Icons.play_circle_filled_rounded),
-                    iconSize: 48,
-                    color: context.colors.primary,
-                    onPressed: () {
-                      Navigator.pop(context);
-                      audioController.playSongs(songs);
-                    },
-                  ),
-                ],
-              ),
+          return Padding(
+            padding: const EdgeInsets.only(bottom: ThemeConstants.spacingSm),
+            child: LibraryListTile(
+              icon: config.icon,
+              title: config.title,
+              subtitle: _getSubtitle(category, count),
+              color: config.color,
+              onTap: () => _navigateToCategory(context, ref, category, counts),
             ),
-            const Divider(),
-            Expanded(
-              child: ListView.builder(
-                controller: scrollController,
-                itemCount: songs.length,
-                itemBuilder: (context, index) {
-                  final song = songs[index];
-                  return SongTile(
-                    song: song,
-                    onTap: () {
-                      Navigator.pop(context);
-                      audioController.playSongs(songs, startIndex: index);
-                    },
-                  );
-                },
-              ),
-            ),
-          ],
-        ),
+          );
+        }, childCount: categories.length),
       ),
     );
+  }
+
+  String _getSubtitle(LibraryCategory category, int count) {
+    switch (category) {
+      case LibraryCategory.allSongs:
+        return '$count songs';
+      case LibraryCategory.playlists:
+        return '$count playlists';
+      case LibraryCategory.artists:
+        return '$count artists';
+      case LibraryCategory.albums:
+        return '$count albums';
+      case LibraryCategory.genres:
+        return '$count genres';
+      case LibraryCategory.years:
+        return '$count years';
+      case LibraryCategory.favorites:
+      case LibraryCategory.recentlyAdded:
+      case LibraryCategory.recentlyPlayed:
+        return '$count songs';
+    }
+  }
+
+  void _navigateToCategory(
+    BuildContext context,
+    WidgetRef ref,
+    LibraryCategory category,
+    Map<LibraryCategory, int> counts,
+  ) {
+    final config = CategoryConfig.get(category);
+
+    switch (category) {
+      // Navigate to BrowseScreen for browsing categories
+      case LibraryCategory.artists:
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => const BrowseScreen(type: BrowseType.artists),
+          ),
+        );
+        break;
+
+      case LibraryCategory.albums:
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => const BrowseScreen(type: BrowseType.albums),
+          ),
+        );
+        break;
+
+      case LibraryCategory.genres:
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => const BrowseScreen(type: BrowseType.genres),
+          ),
+        );
+        break;
+
+      case LibraryCategory.years:
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => const BrowseScreen(type: BrowseType.years),
+          ),
+        );
+        break;
+
+      case LibraryCategory.playlists:
+        // Navigate to existing playlists screen
+        Navigator.pushNamed(context, '/playlists');
+        break;
+
+      // Navigate directly to songs list for song-based categories
+      case LibraryCategory.allSongs:
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => SongsListScreen(
+              title: config.title,
+              subtitle: '${counts[LibraryCategory.allSongs] ?? 0} songs',
+              icon: config.icon,
+              color: config.color,
+              songs: ref
+                  .watch(songsProvider)
+                  .when(
+                    data: (songs) => songs,
+                    loading: () => <Song>[],
+                    error: (_, __) => <Song>[],
+                  ),
+            ),
+          ),
+        );
+        break;
+
+      case LibraryCategory.favorites:
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => SongsListScreen(
+              title: config.title,
+              subtitle: '${counts[LibraryCategory.favorites] ?? 0} songs',
+              icon: config.icon,
+              color: config.color,
+              songs: ref.watch(favoriteSongsProvider),
+            ),
+          ),
+        );
+        break;
+
+      case LibraryCategory.recentlyAdded:
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => SongsListScreen(
+              title: config.title,
+              subtitle: '${counts[LibraryCategory.recentlyAdded] ?? 0} songs',
+              icon: config.icon,
+              color: config.color,
+              songs: ref.watch(recentlyAddedProvider),
+            ),
+          ),
+        );
+        break;
+
+      case LibraryCategory.recentlyPlayed:
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => SongsListScreen(
+              title: config.title,
+              subtitle: '${counts[LibraryCategory.recentlyPlayed] ?? 0} songs',
+              icon: config.icon,
+              color: config.color,
+              songs: ref.watch(recentlyPlayedProvider),
+            ),
+          ),
+        );
+        break;
+    }
   }
 }

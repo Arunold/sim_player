@@ -50,7 +50,7 @@ class AppConstants {
   // UI Constants
   static const Duration animationDuration = Duration(milliseconds: 300);
   static const Duration snackBarDuration = Duration(seconds: 3);
-  static const double miniPlayerHeight = 72.0;
+  static const double miniPlayerHeight = 120.0;
   static const double bottomNavHeight = 80.0;
 
   // Artwork

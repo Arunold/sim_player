@@ -69,7 +69,7 @@ class NowPlayingScreen extends ConsumerWidget {
               ),
             ),
           ),
-        // Dark overlay for readability
+        // Overlay for readability
         Positioned.fill(
           child: Container(
             decoration: BoxDecoration(
@@ -81,7 +81,6 @@ class NowPlayingScreen extends ConsumerWidget {
                   context.colors.backgroundSecondary.withValues(alpha: 0.25),
                   context.colors.backgroundTertiary.withValues(alpha: 0.3),
                 ],
-                // stops: const [0.0, 0.5, 1.0],
               ),
             ),
           ),

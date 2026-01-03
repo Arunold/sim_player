@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:sim_player/core/constants/app_constants.dart';
 import 'dart:io';
 import '../../core/constants/theme_constants.dart';
 import '../../core/theme/glass_style.dart';
@@ -85,7 +86,7 @@ class MiniPlayer extends ConsumerWidget {
     dynamic audioController,
   ) {
     // Sizes based on compact mode
-    final height = compact ? 110.0 : 120.0;
+    final height = compact ? 110.0 : AppConstants.miniPlayerHeight;
     final artworkSize = compact ? 70.0 : 90.0;
     final progressHeight = compact ? 2.0 : 3.0;
     final titleSize = compact ? 14.0 : 15.0;
