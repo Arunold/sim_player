@@ -1,0 +1,83 @@
+name: sim_player
+description: "SimPlayer - Cross-Platform Music Player"
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.10.4
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  cupertino_icons: ^1.0.8
+  
+  # State Management
+  flutter_riverpod: ^2.5.1
+  riverpod_annotation: ^2.3.5
+  
+  # Audio Playback
+  just_audio: ^0.9.40
+  just_audio_background: ^0.0.1-beta.13
+  audio_service: ^0.18.15
+  audio_session: ^0.1.21
+  
+  # Local Storage & Database
+  hive: ^2.2.3
+  hive_flutter: ^1.1.0
+  path_provider: ^2.1.4
+  path: ^1.9.0
+  
+  # File System & Permissions
+  permission_handler: ^11.3.1
+  file_picker: ^8.1.2
+  
+  # Metadata Extraction (pure Dart, cross-platform)
+  audio_metadata_reader: ^1.4.2
+  
+  # UI Components
+  cached_network_image: ^3.4.1
+  shimmer: ^3.0.0
+  
+  # Routing
+  go_router: ^14.3.0
+  
+  # Utilities
+  uuid: ^4.5.1
+  collection: ^1.18.0
+  intl: ^0.20.2
+  equatable: ^2.0.5
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+  hive_generator: ^2.0.1
+  build_runner: ^2.4.12
+
+flutter:
+  uses-material-design: true
+  
+  assets:
+    - assets/images/
+    - assets/icons/
+
+  # To add custom fonts to your application, add a fonts section here,
+  # in this "flutter" section. Each entry in this list should have a
+  # "family" key with the font family name, and a "fonts" key with a
+  # list giving the asset and other descriptors for the font. For
+  # example:
+  # fonts:
+  #   - family: Schyler
+  #     fonts:
+  #       - asset: fonts/Schyler-Regular.ttf
+  #       - asset: fonts/Schyler-Italic.ttf
+  #         style: italic
+  #   - family: Trajan Pro
+  #     fonts:
+  #       - asset: fonts/TrajanPro.ttf
+  #       - asset: fonts/TrajanPro_Bold.ttf
+  #         weight: 700
+  #
+  # For details regarding fonts from package dependencies,
+  # see https://flutter.dev/to/font-from-package
