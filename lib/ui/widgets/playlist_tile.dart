@@ -58,9 +58,9 @@ class PlaylistTile extends StatelessWidget {
           end: Alignment.bottomRight,
         ),
       ),
-      child: const Icon(
+      child: Icon(
         Icons.queue_music_rounded,
-        color: Colors.white,
+        color: context.colors.textPrimary,
         size: 24,
       ),
     );

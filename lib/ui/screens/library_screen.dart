@@ -140,7 +140,7 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen>
 
         return ListTile(
           leading: CircleAvatar(
-            backgroundColor: ThemeConstants.darkCard,
+            backgroundColor: context.colors.card,
             child: Text(
               artist[0].toUpperCase(),
               style: TextStyle(
@@ -244,10 +244,10 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen>
                     radius: 24,
                     child: Text(
                       artist[0].toUpperCase(),
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: 20,
-                        color: Colors.white,
+                        color: context.colors.textPrimary,
                       ),
                     ),
                   ),

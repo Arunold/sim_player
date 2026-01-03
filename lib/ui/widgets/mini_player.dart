@@ -6,10 +6,20 @@ import '../../core/theme/glass_style.dart';
 import '../../providers/providers.dart';
 
 /// Mini player widget shown at the bottom of screens
+///
+/// [compact] - If true, shows a smaller version suitable for side nav
+/// [useGlassContainer] - If true, wraps content in GlassContainer (default: true)
 class MiniPlayer extends ConsumerWidget {
   final VoidCallback? onTap;
+  final bool compact;
+  final bool useGlassContainer;
 
-  const MiniPlayer({super.key, this.onTap});
+  const MiniPlayer({
+    super.key,
+    this.onTap,
+    this.compact = false,
+    this.useGlassContainer = true,
+  });
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -32,149 +42,30 @@ class MiniPlayer extends ConsumerWidget {
 
         return playerStateAsync.when(
           data: (playerState) {
+            final content = _buildContent(
+              context,
+              ref,
+              song,
+              playerState,
+              audioController,
+            );
+
             return GestureDetector(
               onTap: onTap,
-              child: GlassContainer.miniPlayer(
-                child: SizedBox(
-                  height: 120,
-                  child: Column(
-                    children: [
-                      // Progress bar
-                      LinearProgressIndicator(
-                        value: playerState.progress,
-                        backgroundColor: ThemeConstants.darkCard.withValues(
-                          alpha: 0.5,
-                        ),
-                        valueColor: AlwaysStoppedAnimation<Color>(
-                          context.colors.primary,
-                        ),
-                        minHeight: 3,
-                      ),
-                      // Content
-                      Expanded(
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 10),
-                          child: Row(
-                            children: [
-                              // Artwork
-                              Container(
-                                width: 90,
-                                height: 90,
-                                decoration: BoxDecoration(
-                                  borderRadius: BorderRadius.circular(8),
-                                  color: ThemeConstants.darkCard,
-                                ),
-                                child: ClipRRect(
-                                  borderRadius: BorderRadius.circular(8),
-                                  child: song.artworkPath != null
-                                      ? Image.file(
-                                          File(song.artworkPath!),
-                                          fit: BoxFit.cover,
-                                          errorBuilder: (_, __, ___) =>
-                                              _buildPlaceholder(context),
-                                        )
-                                      : _buildPlaceholder(context),
-                                ),
-                              ),
-                              const SizedBox(width: 10),
-                              // Song info and controls
-                              Expanded(
-                                child: Column(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    // Song info
-                                    Text(
-                                      song.title,
-                                      style: const TextStyle(
-                                        fontWeight: FontWeight.w500,
-                                        fontSize: 15,
-                                      ),
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
-                                    Text(
-                                      song.artist,
-                                      style: TextStyle(
-                                        fontSize: 14,
-                                        color: context.colors.textSecondary,
-                                      ),
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
-                                    Text(
-                                      '${song.album}${song.year != null ? ' • ${song.year}' : ''}',
-                                      style: TextStyle(
-                                        fontSize: 13,
-                                        color: context.colors.textSecondary
-                                            .withValues(alpha: 0.7),
-                                      ),
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
-                                    // Controls
-                                    Row(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.spaceEvenly,
-                                      children: [
-                                        IconButton(
-                                          icon: Icon(
-                                            song.isFavorite
-                                                ? Icons.favorite_rounded
-                                                : Icons.favorite_border_rounded,
-                                            color: song.isFavorite
-                                                ? ThemeConstants.errorColor
-                                                : null,
-                                          ),
-                                          iconSize: 24,
-                                          onPressed: () => ref
-                                              .read(songsProvider.notifier)
-                                              .toggleFavorite(song.id),
-                                          padding: EdgeInsets.zero,
-                                        ),
-                                        IconButton(
-                                          icon: const Icon(
-                                            Icons.skip_previous_rounded,
-                                          ),
-                                          iconSize: 30,
-                                          onPressed: () =>
-                                              audioController.skipToPrevious(),
-                                          padding: EdgeInsets.zero,
-                                        ),
-                                        IconButton(
-                                          icon: Icon(
-                                            playerState.isPlaying
-                                                ? Icons.pause_rounded
-                                                : Icons.play_arrow_rounded,
-                                          ),
-                                          iconSize: 35,
-                                          onPressed: () =>
-                                              audioController.togglePlayPause(),
-                                          padding: EdgeInsets.zero,
-                                        ),
-                                        IconButton(
-                                          icon: const Icon(
-                                            Icons.skip_next_rounded,
-                                          ),
-                                          iconSize: 30,
-                                          onPressed: () =>
-                                              audioController.skipToNext(),
-                                          padding: EdgeInsets.zero,
-                                        ),
-                                        Text(song.durationFormatted),
-                                      ],
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ],
+              child: useGlassContainer
+                  ? GlassContainer.miniPlayer(child: content)
+                  : Container(
+                      decoration: BoxDecoration(
+                        color: context.colors.card,
+                        border: Border(
+                          top: BorderSide(
+                            color: context.colors.divider,
+                            width: 1,
                           ),
                         ),
                       ),
-                    ],
-                  ),
-                ),
-              ),
+                      child: content,
+                    ),
             );
           },
           loading: () => const SizedBox.shrink(),
@@ -186,13 +77,187 @@ class MiniPlayer extends ConsumerWidget {
     );
   }
 
-  Widget _buildPlaceholder(BuildContext context) {
+  Widget _buildContent(
+    BuildContext context,
+    WidgetRef ref,
+    dynamic song,
+    dynamic playerState,
+    dynamic audioController,
+  ) {
+    // Sizes based on compact mode
+    final height = compact ? 110.0 : 120.0;
+    final artworkSize = compact ? 70.0 : 90.0;
+    final progressHeight = compact ? 2.0 : 3.0;
+    final titleSize = compact ? 14.0 : 15.0;
+    final subtitleSize = compact ? 12.0 : 14.0;
+    final iconSize = compact ? 24.0 : 30.0;
+    final playIconSize = compact ? 28.0 : 35.0;
+
+    return SizedBox(
+      height: height,
+      child: Column(
+        children: [
+          // Progress bar
+          LinearProgressIndicator(
+            value: playerState.progress,
+            backgroundColor: context.colors.primary.withValues(alpha: 0.35),
+            valueColor: AlwaysStoppedAnimation<Color>(context.colors.primary),
+            minHeight: progressHeight,
+          ),
+          // Content
+          Expanded(
+            child: Padding(
+              padding: EdgeInsets.symmetric(horizontal: compact ? 12 : 10),
+              child: Row(
+                children: [
+                  // Artwork
+                  Container(
+                    width: artworkSize,
+                    height: artworkSize,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(
+                        ThemeConstants.radiusSm,
+                      ),
+                      color: context.colors.surface,
+                    ),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(
+                        ThemeConstants.radiusSm,
+                      ),
+                      child: song.artworkPath != null
+                          ? Image.file(
+                              File(song.artworkPath!),
+                              fit: BoxFit.cover,
+                              errorBuilder: (_, __, ___) =>
+                                  _buildPlaceholder(context, compact),
+                            )
+                          : _buildPlaceholder(context, compact),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  // Song info and controls
+                  Expanded(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Song info
+                        Text(
+                          song.title,
+                          style: TextStyle(
+                            fontWeight: FontWeight.w600,
+                            fontSize: titleSize,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          song.artist,
+                          style: TextStyle(
+                            fontSize: subtitleSize,
+                            color: context.colors.textSecondary,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        Text(
+                          '${song.album}${song.year != null ? ' • ${song.year}' : ''}',
+                          style: TextStyle(
+                            fontSize: compact ? 11 : 13,
+                            color: context.colors.textSecondary.withValues(
+                              alpha: 0.7,
+                            ),
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        const SizedBox(height: 4),
+                        // Controls
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                          children: [
+                            IconButton(
+                              icon: Icon(
+                                song.isFavorite
+                                    ? Icons.favorite_rounded
+                                    : Icons.favorite_border_rounded,
+                                color: song.isFavorite
+                                    ? context.colors.error
+                                    : null,
+                              ),
+                              iconSize: compact ? 20 : 24,
+                              onPressed: () => ref
+                                  .read(songsProvider.notifier)
+                                  .toggleFavorite(song.id),
+                              padding: EdgeInsets.zero,
+                              constraints: const BoxConstraints(),
+                            ),
+                            IconButton(
+                              icon: const Icon(Icons.skip_previous_rounded),
+                              iconSize: iconSize,
+                              onPressed: () => audioController.skipToPrevious(),
+                              padding: EdgeInsets.zero,
+                              constraints: const BoxConstraints(),
+                            ),
+                            Container(
+                              decoration: compact
+                                  ? BoxDecoration(
+                                      color: context.colors.primary,
+                                      shape: BoxShape.circle,
+                                    )
+                                  : null,
+                              child: IconButton(
+                                icon: Icon(
+                                  playerState.isPlaying
+                                      ? Icons.pause_rounded
+                                      : Icons.play_arrow_rounded,
+                                  color: compact
+                                      ? context.colors.backgroundPrimary
+                                      : null,
+                                ),
+                                iconSize: playIconSize,
+                                onPressed: () =>
+                                    audioController.togglePlayPause(),
+                                padding: EdgeInsets.zero,
+                                constraints: const BoxConstraints(),
+                              ),
+                            ),
+                            IconButton(
+                              icon: const Icon(Icons.skip_next_rounded),
+                              iconSize: iconSize,
+                              onPressed: () => audioController.skipToNext(),
+                              padding: EdgeInsets.zero,
+                              constraints: const BoxConstraints(),
+                            ),
+                            Text(
+                              song.durationFormatted,
+                              style: TextStyle(
+                                fontSize: compact ? 11 : 13,
+                                color: context.colors.textSecondary,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPlaceholder(BuildContext context, bool isCompact) {
     return Container(
       color: context.colors.card,
       child: Icon(
         Icons.music_note_rounded,
         color: context.colors.textSecondary.withValues(alpha: 0.5),
-        size: 20,
+        size: isCompact ? 28 : 20,
       ),
     );
   }

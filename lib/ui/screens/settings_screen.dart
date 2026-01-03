@@ -97,7 +97,7 @@ class SettingsScreen extends ConsumerWidget {
     Widget? trailing,
     bool isDestructive = false,
   }) {
-    final color = isDestructive ? ThemeConstants.errorColor : null;
+    final color = isDestructive ? context.colors.error : null;
 
     return ListTile(
       leading: Icon(icon, color: color ?? context.colors.textSecondary),
@@ -188,7 +188,7 @@ class SettingsScreen extends ConsumerWidget {
               Icon(
                 icon,
                 color: isSelected
-                    ? Colors.white
+                    ? context.colors.textPrimary
                     : context.colors.textSecondary,
               ),
               const SizedBox(height: 4),
@@ -198,7 +198,7 @@ class SettingsScreen extends ConsumerWidget {
                   fontSize: 12,
                   fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
                   color: isSelected
-                      ? Colors.white
+                      ? context.colors.textPrimary
                       : context.colors.textSecondary,
                 ),
               ),
@@ -268,10 +268,7 @@ class SettingsScreen extends ConsumerWidget {
                 );
               }
             },
-            child: Text(
-              'Clear',
-              style: TextStyle(color: ThemeConstants.errorColor),
-            ),
+            child: Text('Clear', style: TextStyle(color: context.colors.error)),
           ),
         ],
       ),
@@ -306,9 +303,9 @@ class SettingsScreen extends ConsumerWidget {
           color: context.colors.primary,
           borderRadius: BorderRadius.circular(12),
         ),
-        child: const Icon(
+        child: Icon(
           Icons.music_note_rounded,
-          color: Colors.white,
+          color: context.colors.textPrimary,
           size: 32,
         ),
       ),

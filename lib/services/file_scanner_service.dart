@@ -1,17 +1,18 @@
 import 'dart:async';
 import 'dart:io';
 import 'dart:typed_data';
-import 'package:audio_metadata_reader/audio_metadata_reader.dart';
 import 'package:path/path.dart' as path;
 import 'package:path_provider/path_provider.dart';
 import 'package:uuid/uuid.dart';
 import '../data/models/song.dart';
 import '../data/repositories/song_repository.dart';
 import '../core/constants/app_constants.dart';
+import 'metadata_service.dart';
 
 /// Service for scanning local files and extracting metadata
 class FileScannerService {
   final SongRepository _songRepository;
+  final MetadataService _metadataService;
   final _uuid = const Uuid();
   String? _artworkCacheDir;
 
@@ -28,7 +29,8 @@ class FileScannerService {
 
   bool get isScanning => _isScanning;
 
-  FileScannerService(this._songRepository);
+  FileScannerService(this._songRepository, {MetadataService? metadataService})
+      : _metadataService = metadataService ?? MetadataService();
 
   /// Initialize artwork cache directory
   Future<String> _getArtworkCacheDir() async {
@@ -231,7 +233,7 @@ class FileScannerService {
     return AppConstants.supportedAudioFormats.contains(extension);
   }
 
-  /// Extract metadata from audio file using audio_metadata_reader (pure Dart, cross-platform)
+  /// Extract metadata from audio file using MetadataService
   Future<Song?> _extractBasicMetadata(
     File file, {
     String? existingSongId,
@@ -245,7 +247,7 @@ class FileScannerService {
       final basename = path.basenameWithoutExtension(file.path);
       final songId = existingSongId ?? _uuid.v4();
 
-      // Try to extract metadata using audio_metadata_reader
+      // Try to extract metadata using MetadataService
       String? title;
       String? artist;
       String? album;
@@ -255,38 +257,29 @@ class FileScannerService {
       String? genre;
       String? artworkPath;
       Duration duration = Duration.zero;
+      int? bitrate;
 
-      try {
-        // audio_metadata_reader supports MP3, MP4, FLAC, OGG, Opus, WAV
-        final metadata = readMetadata(file, getImage: true);
-
+      // Use MetadataService for extraction (handles all formats gracefully)
+      final metadata = _metadataService.extractBasicMetadata(file, getImage: true);
+      
+      if (metadata != null) {
         title = metadata.title;
         artist = metadata.artist;
         album = metadata.album;
-
-        // Duration is directly provided by the library
+        albumArtist = metadata.albumArtist;
+        bitrate = metadata.bitrate;
         duration = metadata.duration ?? Duration.zero;
-
-        // Track number
         trackNumber = metadata.trackNumber;
-
-        // Year
-        if (metadata.year != null) {
-          year = metadata.year!.year;
-        }
-
-        // Genre (first one if multiple)
+        year = metadata.year;
+        
         if (metadata.genres.isNotEmpty) {
           genre = metadata.genres.first;
         }
-
-        // Extract artwork from pictures
-        if (metadata.pictures.isNotEmpty) {
-          final picture = metadata.pictures.first;
-          artworkPath = await _extractArtwork(picture.bytes, songId);
+        
+        // Extract artwork
+        if (metadata.artworkBytes != null) {
+          artworkPath = await _extractArtwork(metadata.artworkBytes, songId);
         }
-      } catch (_) {
-        // Metadata extraction failed, use defaults
       }
 
       // Fall back to filename parsing if tags are missing
@@ -316,6 +309,7 @@ class FileScannerService {
         year: year,
         genre: genre,
         fileExtension: extension,
+        bitrate: bitrate,
         fileSize: fileStat.size,
         dateAdded: existingSongId != null
             ? _songRepository.getSongById(existingSongId)?.dateAdded ??

@@ -14,7 +14,7 @@ class AudioService {
 
   PlaybackQueue _queue = const PlaybackQueue(songIds: []);
   AppPlayerState _playerState = const AppPlayerState();
-  
+
   // Persistence box
   late Box _queueBox;
 
@@ -39,7 +39,7 @@ class AudioService {
   Future<void> init() async {
     // Open persistence box
     _queueBox = await Hive.openBox(AppConstants.queueBox);
-    
+
     // Configure audio session
     final session = await AudioSession.instance;
     await session.configure(const AudioSessionConfiguration.music());
@@ -72,11 +72,11 @@ class AudioService {
         _onTrackCompleted();
       }
     });
-    
+
     // Restore saved queue
     await _restoreQueue();
   }
-  
+
   /// Save current queue to persistent storage
   Future<void> _saveQueue() async {
     await _queueBox.put('songIds', _queue.songIds);
@@ -86,7 +86,7 @@ class AudioService {
     await _queueBox.put('repeatMode', _playerState.repeatMode.index);
     await _queueBox.put('shuffleEnabled', _playerState.isShuffleEnabled);
   }
-  
+
   /// Restore queue from persistent storage
   Future<void> _restoreQueue() async {
     final songIds = _queueBox.get('songIds', defaultValue: <String>[]);
@@ -95,32 +95,33 @@ class AudioService {
     final originalOrder = _queueBox.get('originalOrder');
     final repeatModeIndex = _queueBox.get('repeatMode', defaultValue: 0);
     final shuffleEnabled = _queueBox.get('shuffleEnabled', defaultValue: false);
-    
+
     if (songIds is List && songIds.isNotEmpty) {
       final validSongIds = songIds.cast<String>().where((id) {
         return _songRepository.getSongById(id) != null;
       }).toList();
-      
+
       if (validSongIds.isNotEmpty) {
         final adjustedIndex = currentIndex.clamp(0, validSongIds.length - 1);
-        
+
         _queue = PlaybackQueue(
           songIds: validSongIds,
           currentIndex: adjustedIndex,
           isShuffled: isShuffled,
-          originalOrder: originalOrder != null 
-            ? (originalOrder as List).cast<String>() 
-            : null,
+          originalOrder: originalOrder != null
+              ? (originalOrder as List).cast<String>()
+              : null,
         );
-        
+
         _playerState = _playerState.copyWith(
-          repeatMode: RepeatMode.values[repeatModeIndex.clamp(0, RepeatMode.values.length - 1)],
+          repeatMode: RepeatMode
+              .values[repeatModeIndex.clamp(0, RepeatMode.values.length - 1)],
           isShuffleEnabled: shuffleEnabled,
         );
-        
+
         _queueController.add(_queue);
         _playerStateController.add(_playerState);
-        
+
         // Load the song but don't auto-play
         await _loadCurrentSong();
       }
@@ -221,7 +222,7 @@ class AudioService {
     if (_queue.isEmpty) return;
     await _player.play();
     _updatePlayerState(status: PlaybackStatus.playing);
-    
+
     // Record play count
     final songId = _queue.currentSongId;
     if (songId != null) {
@@ -294,30 +295,34 @@ class AudioService {
     if (isShuffled) {
       final currentSongId = _queue.currentSongId;
       final shuffledIds = List<String>.from(_queue.songIds)..shuffle(Random());
-      
+
       // Move current song to the front
       if (currentSongId != null) {
         shuffledIds.remove(currentSongId);
         shuffledIds.insert(0, currentSongId);
       }
-      
-      _updateQueue(_queue.copyWith(
-        songIds: shuffledIds,
-        currentIndex: 0,
-        isShuffled: true,
-        originalOrder: _queue.songIds,
-      ));
+
+      _updateQueue(
+        _queue.copyWith(
+          songIds: shuffledIds,
+          currentIndex: 0,
+          isShuffled: true,
+          originalOrder: _queue.songIds,
+        ),
+      );
     } else {
       // Restore original order
       if (_queue.originalOrder != null) {
         final currentSongId = _queue.currentSongId;
         final newIndex = _queue.originalOrder!.indexOf(currentSongId ?? '');
-        _updateQueue(_queue.copyWith(
-          songIds: _queue.originalOrder,
-          currentIndex: newIndex >= 0 ? newIndex : 0,
-          isShuffled: false,
-          originalOrder: null,
-        ));
+        _updateQueue(
+          _queue.copyWith(
+            songIds: _queue.originalOrder,
+            currentIndex: newIndex >= 0 ? newIndex : 0,
+            isShuffled: false,
+            originalOrder: null,
+          ),
+        );
       }
     }
   }
@@ -344,7 +349,7 @@ class AudioService {
       await seek(Duration.zero);
       return;
     }
-    
+
     if (!_queue.hasPrevious) return;
     _updateQueue(_queue.moveToPrevious());
     await _loadCurrentSong();
@@ -352,17 +357,14 @@ class AudioService {
   }
 
   Future<void> playSong(Song song) async {
-    _updateQueue(PlaybackQueue(
-      songIds: [song.id],
-      currentIndex: 0,
-    ));
+    _updateQueue(PlaybackQueue(songIds: [song.id], currentIndex: 0));
     await _loadCurrentSong();
     await play();
   }
 
   Future<void> playSongs(List<Song> songs, {int startIndex = 0}) async {
     if (songs.isEmpty) return;
-    
+
     var songIds = songs.map((s) => s.id).toList();
     var index = startIndex.clamp(0, songs.length - 1);
 
@@ -372,20 +374,19 @@ class AudioService {
       final startSongId = songs[startIndex].id;
       songIds.remove(startSongId);
       songIds.insert(0, startSongId);
-      
-      _updateQueue(PlaybackQueue(
-        songIds: songIds,
-        currentIndex: 0,
-        isShuffled: true,
-        originalOrder: originalOrder,
-      ));
+
+      _updateQueue(
+        PlaybackQueue(
+          songIds: songIds,
+          currentIndex: 0,
+          isShuffled: true,
+          originalOrder: originalOrder,
+        ),
+      );
     } else {
-      _updateQueue(PlaybackQueue(
-        songIds: songIds,
-        currentIndex: index,
-      ));
+      _updateQueue(PlaybackQueue(songIds: songIds, currentIndex: index));
     }
-    
+
     await _loadCurrentSong();
     await play();
   }
@@ -419,16 +420,17 @@ class AudioService {
     var newCurrentIndex = _queue.currentIndex;
     if (oldIndex == _queue.currentIndex) {
       newCurrentIndex = newIndex;
-    } else if (oldIndex < _queue.currentIndex && newIndex >= _queue.currentIndex) {
+    } else if (oldIndex < _queue.currentIndex &&
+        newIndex >= _queue.currentIndex) {
       newCurrentIndex--;
-    } else if (oldIndex > _queue.currentIndex && newIndex <= _queue.currentIndex) {
+    } else if (oldIndex > _queue.currentIndex &&
+        newIndex <= _queue.currentIndex) {
       newCurrentIndex++;
     }
 
-    _updateQueue(_queue.copyWith(
-      songIds: songIds,
-      currentIndex: newCurrentIndex,
-    ));
+    _updateQueue(
+      _queue.copyWith(songIds: songIds, currentIndex: newCurrentIndex),
+    );
   }
 
   void dispose() {

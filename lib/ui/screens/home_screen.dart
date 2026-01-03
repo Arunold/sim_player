@@ -61,7 +61,7 @@ class HomeScreen extends ConsumerWidget {
                     icon: Icons.album_rounded,
                     label: 'Albums',
                     value: ref.watch(albumsProvider).length.toString(),
-                    color: Colors.pinkAccent,
+                    color: context.colors.secondary,
                     onTap: () => _navigateToLibrary(context),
                   ),
                 ],
@@ -163,7 +163,7 @@ class HomeScreen extends ConsumerWidget {
   }) {
     return Expanded(
       child: Material(
-        color: ThemeConstants.darkCard,
+        color: context.colors.card,
         borderRadius: BorderRadius.circular(ThemeConstants.radiusMd),
         child: InkWell(
           onTap: onTap,
@@ -313,7 +313,7 @@ class HomeScreen extends ConsumerWidget {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Error scanning: $e'),
-            backgroundColor: Colors.red,
+            backgroundColor: context.colors.error,
           ),
         );
       }

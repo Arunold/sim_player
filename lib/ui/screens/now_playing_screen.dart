@@ -144,7 +144,8 @@ class NowPlayingScreen extends ConsumerWidget {
                             ),
                             boxShadow: [
                               BoxShadow(
-                                color: Colors.black.withValues(alpha: 0.3),
+                                color: context.colors.backgroundPrimary
+                                    .withValues(alpha: 0.3),
                                 blurRadius: 30,
                                 offset: const Offset(0, 10),
                               ),
@@ -183,7 +184,7 @@ class NowPlayingScreen extends ConsumerWidget {
                         song.isFavorite
                             ? Icons.favorite_rounded
                             : Icons.favorite_border_rounded,
-                        color: song.isFavorite ? Colors.redAccent : null,
+                        color: song.isFavorite ? context.colors.error : null,
                       ),
                       tooltip: song.isFavorite
                           ? 'Remove from favorites'
@@ -347,7 +348,7 @@ class NowPlayingScreen extends ConsumerWidget {
                           playerState.isPlaying
                               ? Icons.pause_rounded
                               : Icons.play_arrow_rounded,
-                          color: Colors.white,
+                          color: context.colors.textPrimary,
                         ),
                         iconSize: 40,
                         onPressed: () => audioController.togglePlayPause(),
@@ -435,7 +436,7 @@ class NowPlayingScreen extends ConsumerWidget {
                 song.isFavorite
                     ? Icons.favorite_rounded
                     : Icons.favorite_border_rounded,
-                color: song.isFavorite ? Colors.redAccent : null,
+                color: song.isFavorite ? context.colors.error : null,
               ),
               title: Text(
                 song.isFavorite ? 'Remove from favorites' : 'Add to favorites',

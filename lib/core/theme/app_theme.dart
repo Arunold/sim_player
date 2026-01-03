@@ -19,10 +19,10 @@ class AppTheme {
         tertiary: AppColors.dark.accent,
         surface: AppColors.dark.surface,
         error: AppColors.dark.error,
-        onPrimary: Colors.white,
-        onSecondary: Colors.white,
+        onPrimary: AppColors.dark.textPrimary,
+        onSecondary: AppColors.dark.textPrimary,
         onSurface: AppColors.dark.textPrimary,
-        onError: Colors.white,
+        onError: AppColors.dark.textPrimary,
       ),
       appBarTheme: AppBarTheme(
         backgroundColor: AppColors.dark.backgroundPrimary,
@@ -111,7 +111,7 @@ class AppTheme {
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
           backgroundColor: AppColors.dark.primary,
-          foregroundColor: Colors.white,
+          foregroundColor: AppColors.dark.textPrimary,
           padding: const EdgeInsets.symmetric(
             horizontal: ThemeConstants.spacingLarge,
             vertical: ThemeConstants.spacingMedium,
@@ -131,7 +131,7 @@ class AppTheme {
       ),
       floatingActionButtonTheme: FloatingActionButtonThemeData(
         backgroundColor: AppColors.dark.primary,
-        foregroundColor: Colors.white,
+        foregroundColor: AppColors.dark.textPrimary,
       ),
       snackBarTheme: SnackBarThemeData(
         backgroundColor: AppColors.dark.card,
@@ -193,10 +193,10 @@ class AppTheme {
         tertiary: AppColors.light.accent,
         surface: AppColors.light.surface,
         error: AppColors.light.error,
-        onPrimary: Colors.white,
-        onSecondary: Colors.white,
+        onPrimary: AppColors.light.textPrimary,
+        onSecondary: AppColors.light.textPrimary,
         onSurface: AppColors.light.textPrimary,
-        onError: Colors.white,
+        onError: AppColors.light.textPrimary,
       ),
       appBarTheme: AppBarTheme(
         backgroundColor: AppColors.light.backgroundPrimary,
@@ -285,7 +285,7 @@ class AppTheme {
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
           backgroundColor: AppColors.light.primary,
-          foregroundColor: Colors.white,
+          foregroundColor: AppColors.light.textPrimary,
           padding: const EdgeInsets.symmetric(
             horizontal: ThemeConstants.spacingLarge,
             vertical: ThemeConstants.spacingMedium,
@@ -305,7 +305,7 @@ class AppTheme {
       ),
       floatingActionButtonTheme: FloatingActionButtonThemeData(
         backgroundColor: AppColors.light.primary,
-        foregroundColor: Colors.white,
+        foregroundColor: AppColors.light.textPrimary,
       ),
       snackBarTheme: SnackBarThemeData(
         backgroundColor: AppColors.light.textPrimary,

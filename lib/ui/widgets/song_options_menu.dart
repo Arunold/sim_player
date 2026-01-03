@@ -53,7 +53,7 @@ class SongOptionsMenu extends ConsumerWidget {
     this.onOptionSelected,
     this.icon,
     this.iconSize,
-    this.iconColor = ThemeConstants.darkCard,
+    this.iconColor,
     this.position = PopupMenuPosition.under,
   });
 
@@ -98,7 +98,11 @@ class SongOptionsMenu extends ConsumerWidget {
   };
  */
 
-  SongOptionConfig _getConfig(SongOption option, bool isFavorite) {
+  SongOptionConfig _getConfig(
+    BuildContext context,
+    SongOption option,
+    bool isFavorite,
+  ) {
     switch (option) {
       case SongOption.playNext:
         return const SongOptionConfig(
@@ -121,7 +125,7 @@ class SongOptionsMenu extends ConsumerWidget {
               ? Icons.favorite_rounded
               : Icons.favorite_border_rounded,
           label: isFavorite ? 'Remove from favorites' : 'Add to favorites',
-          iconColor: isFavorite ? ThemeConstants.errorColor : null,
+          iconColor: isFavorite ? context.colors.error : null,
         );
       case SongOption.goToArtist:
         return const SongOptionConfig(
@@ -147,7 +151,7 @@ class SongOptionsMenu extends ConsumerWidget {
       //   return const SongOptionConfig(
       //     icon: Icons.remove_circle_outline_rounded,
       //     label: 'Remove from playlist',
-      //     iconColor: ThemeConstants.errorColor,
+      //     iconColor: context.colors.error,
       //   );
       // case SongOption.share:
       //   return const SongOptionConfig(
@@ -158,7 +162,7 @@ class SongOptionsMenu extends ConsumerWidget {
       //   return const SongOptionConfig(
       //     icon: Icons.delete_outline_rounded,
       //     label: 'Delete',
-      //     iconColor: ThemeConstants.errorColor,
+      //     iconColor: context.colors.error,
       //     isDanger: true,
       //   );
     }
@@ -180,11 +184,11 @@ class SongOptionsMenu extends ConsumerWidget {
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(ThemeConstants.radiusMd),
       ),
-      color: iconColor,
+      color: iconColor ?? context.colors.card,
       elevation: 8,
       position: position,
       itemBuilder: (context) => options.map((option) {
-        final config = _getConfig(option, currentSong.isFavorite);
+        final config = _getConfig(context, option, currentSong.isFavorite);
         return PopupMenuItem<SongOption>(
           value: option,
           child: Row(
@@ -192,15 +196,15 @@ class SongOptionsMenu extends ConsumerWidget {
               Icon(
                 config.icon,
                 size: 20,
-                color: config.iconColor ?? ThemeConstants.darkTextPrimary,
+                color: config.iconColor ?? context.colors.textPrimary,
               ),
               const SizedBox(width: 12),
               Text(
                 config.label,
                 style: TextStyle(
                   color: config.isDanger
-                      ? ThemeConstants.errorColor
-                      : ThemeConstants.darkTextPrimary,
+                      ? context.colors.error
+                      : context.colors.textPrimary,
                 ),
               ),
             ],
@@ -283,7 +287,7 @@ class SongOptionsMenu extends ConsumerWidget {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        backgroundColor: ThemeConstants.darkCard,
+        backgroundColor: context.colors.card,
         title: const Text('Add to playlist'),
         content: playlists.isEmpty
             ? const Text('No playlists yet. Create one first!')
@@ -323,7 +327,7 @@ class SongOptionsMenu extends ConsumerWidget {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        backgroundColor: ThemeConstants.darkCard,
+        backgroundColor: context.colors.card,
         title: const Text('Delete song?'),
         content: Text('Are you sure you want to delete "${song.title}"?'),
         actions: [
@@ -336,9 +340,7 @@ class SongOptionsMenu extends ConsumerWidget {
               // TODO: Implement delete
               Navigator.pop(context);
             },
-            style: TextButton.styleFrom(
-              foregroundColor: ThemeConstants.errorColor,
-            ),
+            style: TextButton.styleFrom(foregroundColor: context.colors.error),
             child: const Text('Delete'),
           ),
         ],
@@ -350,7 +352,7 @@ class SongOptionsMenu extends ConsumerWidget {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        backgroundColor: ThemeConstants.darkCard,
+        backgroundColor: context.colors.card,
         title: const Text('Song info'),
         content: Column(
           mainAxisSize: MainAxisSize.min,

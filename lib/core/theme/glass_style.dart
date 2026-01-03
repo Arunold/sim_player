@@ -6,20 +6,25 @@ import '../constants/theme_constants.dart';
 class GlassStyle {
   GlassStyle._();
 
-  // Default glass colors
-  static const Color defaultTint = Color(0xFF1A1A2E);
-  static const Color defaultBorder = Color(0xFF2E2E2E);
+  /// Get default tint color from theme
+  static Color defaultTint(BuildContext context) =>
+      context.colors.backgroundTertiary;
+
+  /// Get default border color from theme
+  static Color defaultBorder(BuildContext context) => context.colors.divider;
 
   /// Creates a glass-style BoxDecoration
   ///
-  /// [tintColor] - Background tint color (defaults to dark surface)
+  /// [context] - BuildContext to access theme colors
+  /// [tintColor] - Background tint color (defaults to theme background)
   /// [opacity] - Background opacity (0.0 - 1.0, defaults to 0.7)
   /// [borderRadius] - Corner radius (defaults to radiusMd)
-  /// [borderColor] - Border color (defaults to subtle white)
+  /// [borderColor] - Border color (defaults to theme divider)
   /// [borderWidth] - Border width (defaults to 0.5)
   /// [borderOpacity] - Border opacity (0.0 - 1.0, defaults to 0.1)
   /// [shadows] - Custom box shadows (defaults to soft shadow)
-  static BoxDecoration decoration({
+  static BoxDecoration decoration(
+    BuildContext context, {
     Color? tintColor,
     double opacity = 0.7,
     double borderRadius = ThemeConstants.radiusMd,
@@ -29,17 +34,19 @@ class GlassStyle {
     List<BoxShadow>? shadows,
   }) {
     return BoxDecoration(
-      color: (tintColor ?? defaultTint).withValues(alpha: opacity),
+      color: (tintColor ?? defaultTint(context)).withValues(alpha: opacity),
       borderRadius: BorderRadius.circular(borderRadius),
       border: Border.all(
-        color: (borderColor ?? Colors.white).withValues(alpha: borderOpacity),
+        color: (borderColor ?? defaultBorder(context)).withValues(
+          alpha: borderOpacity,
+        ),
         width: borderWidth,
       ),
       boxShadow:
           shadows ??
           [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.2),
+              color: context.colors.backgroundPrimary.withValues(alpha: 0.2),
               blurRadius: 10,
               offset: const Offset(0, 4),
             ),
@@ -49,6 +56,7 @@ class GlassStyle {
 
   /// Creates a glass decoration with gradient
   ///
+  /// [context] - BuildContext to access theme colors
   /// [colors] - List of colors for the gradient
   /// [opacity] - Overall opacity of the gradient
   /// [borderRadius] - Corner radius
@@ -57,7 +65,8 @@ class GlassStyle {
   /// [borderOpacity] - Border opacity
   /// [begin] - Gradient begin alignment
   /// [end] - Gradient end alignment
-  static BoxDecoration gradientDecoration({
+  static BoxDecoration gradientDecoration(
+    BuildContext context, {
     List<Color>? colors,
     double opacity = 0.7,
     double borderRadius = ThemeConstants.radiusMd,
@@ -67,23 +76,28 @@ class GlassStyle {
     AlignmentGeometry begin = Alignment.topLeft,
     AlignmentGeometry end = Alignment.bottomRight,
   }) {
+    final tint = defaultTint(context);
     return BoxDecoration(
       gradient: LinearGradient(
-        colors: [
-          defaultTint.withValues(alpha: opacity),
-          defaultTint.withValues(alpha: opacity * 0.8),
-        ],
+        colors:
+            colors ??
+            [
+              tint.withValues(alpha: opacity),
+              tint.withValues(alpha: opacity * 0.8),
+            ],
         begin: begin,
         end: end,
       ),
       borderRadius: BorderRadius.circular(borderRadius),
       border: Border.all(
-        color: (borderColor ?? Colors.white).withValues(alpha: borderOpacity),
+        color: (borderColor ?? defaultBorder(context)).withValues(
+          alpha: borderOpacity,
+        ),
         width: borderWidth,
       ),
       boxShadow: [
         BoxShadow(
-          color: Colors.black.withValues(alpha: 0.2),
+          color: context.colors.backgroundPrimary.withValues(alpha: 0.2),
           blurRadius: 10,
           offset: const Offset(0, 4),
         ),
@@ -92,14 +106,15 @@ class GlassStyle {
   }
 
   /// Preset: Mini player style
-  static BoxDecoration miniPlayer() => decoration(
-    tintColor: ThemeConstants.darkSurface,
+  static BoxDecoration miniPlayer(BuildContext context) => decoration(
+    context,
+    tintColor: context.colors.surface,
     opacity: 0.015,
     borderRadius: 0,
     borderOpacity: 0.15,
     shadows: [
       BoxShadow(
-        color: Colors.black.withValues(alpha: 0.01),
+        color: context.colors.backgroundPrimary.withValues(alpha: 0.01),
         blurRadius: 15,
         offset: const Offset(0, -5),
       ),
@@ -107,40 +122,39 @@ class GlassStyle {
   );
 
   /// Preset: Side navigation style
-  static BoxDecoration sideNav() => decoration(
-    tintColor: ThemeConstants.darkSurface,
+  static BoxDecoration sideNav(BuildContext context) => decoration(
+    context,
+    tintColor: context.colors.surface,
     opacity: 0.50,
     borderRadius: 0,
     borderOpacity: 0.15,
-    // shadows: [
-    //   BoxShadow(
-    //     color: Colors.black.withValues(alpha: 0.01),
-    //     blurRadius: 15,
-    //     offset: const Offset(0, -5),
-    //   ),
-    // ],
   );
 
   /// Preset: Now playing screen style
-  static BoxDecoration nowPlaying() => decoration(
-    tintColor: ThemeConstants.playerGradientStart,
+  static BoxDecoration nowPlaying(BuildContext context) => decoration(
+    context,
+    tintColor: context.colors.backgroundPrimary,
     opacity: 0.50,
     borderRadius: ThemeConstants.radiusLg,
     borderOpacity: 0.40,
   );
 
   /// Preset: Card style
-  static BoxDecoration card({double borderRadius = ThemeConstants.radiusMd}) =>
-      decoration(
-        tintColor: ThemeConstants.darkCard,
-        opacity: 0.6,
-        borderRadius: borderRadius,
-        borderOpacity: 0.08,
-      );
+  static BoxDecoration card(
+    BuildContext context, {
+    double borderRadius = ThemeConstants.radiusMd,
+  }) => decoration(
+    context,
+    tintColor: context.colors.card,
+    opacity: 0.6,
+    borderRadius: borderRadius,
+    borderOpacity: 0.08,
+  );
 
   /// Preset: Bottom sheet style
-  static BoxDecoration bottomSheet() => decoration(
-    tintColor: ThemeConstants.darkSurface,
+  static BoxDecoration bottomSheet(BuildContext context) => decoration(
+    context,
+    tintColor: context.colors.surface,
     opacity: 0.95,
     borderRadius: ThemeConstants.radiusXl,
     borderOpacity: 0.1,
@@ -150,7 +164,7 @@ class GlassStyle {
 /// A widget that applies glassmorphism effect to its child
 class GlassContainer extends StatelessWidget {
   final Widget child;
-  final BoxDecoration? decoration;
+  final BoxDecoration Function(BuildContext)? decorationBuilder;
   final double? blurAmount;
   final EdgeInsetsGeometry? padding;
   final EdgeInsetsGeometry? margin;
@@ -161,7 +175,7 @@ class GlassContainer extends StatelessWidget {
   const GlassContainer({
     super.key,
     required this.child,
-    this.decoration,
+    this.decorationBuilder,
     this.blurAmount,
     this.padding,
     this.margin,
@@ -177,7 +191,7 @@ class GlassContainer extends StatelessWidget {
     EdgeInsetsGeometry? padding,
   }) {
     return GlassContainer(
-      decoration: GlassStyle.miniPlayer(),
+      decorationBuilder: (context) => GlassStyle.miniPlayer(context),
       blurAmount: blurAmount,
       padding: padding,
       child: child,
@@ -189,10 +203,11 @@ class GlassContainer extends StatelessWidget {
     required Widget child,
     double blurAmount = 10,
     double? width,
-    BoxDecoration? decoration,
+    BoxDecoration Function(BuildContext)? decorationBuilder,
   }) {
     return GlassContainer(
-      decoration: decoration ?? GlassStyle.sideNav(),
+      decorationBuilder:
+          decorationBuilder ?? ((context) => GlassStyle.sideNav(context)),
       blurAmount: blurAmount,
       width: width,
       child: child,
@@ -207,7 +222,7 @@ class GlassContainer extends StatelessWidget {
     EdgeInsetsGeometry? margin,
   }) {
     return GlassContainer(
-      decoration: GlassStyle.nowPlaying(),
+      decorationBuilder: (context) => GlassStyle.nowPlaying(context),
       blurAmount: blurAmount,
       padding: padding,
       margin: margin,
@@ -224,7 +239,8 @@ class GlassContainer extends StatelessWidget {
     double borderRadius = ThemeConstants.radiusMd,
   }) {
     return GlassContainer(
-      decoration: GlassStyle.card(borderRadius: borderRadius),
+      decorationBuilder: (context) =>
+          GlassStyle.card(context, borderRadius: borderRadius),
       blurAmount: blurAmount,
       padding: padding,
       margin: margin,
@@ -234,7 +250,8 @@ class GlassContainer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final effectiveDecoration = decoration ?? GlassStyle.decoration();
+    final effectiveDecoration =
+        decorationBuilder?.call(context) ?? GlassStyle.decoration(context);
     final effectiveBlur = blurAmount ?? 10;
     final borderRadius =
         effectiveDecoration.borderRadius as BorderRadius? ?? BorderRadius.zero;

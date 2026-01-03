@@ -157,13 +157,10 @@ class PlaylistsScreen extends ConsumerWidget {
               },
             ),
             ListTile(
-              leading: const Icon(
-                Icons.delete_rounded,
-                color: Colors.redAccent,
-              ),
-              title: const Text(
+              leading: Icon(Icons.delete_rounded, color: context.colors.error),
+              title: Text(
                 'Delete',
-                style: TextStyle(color: Colors.redAccent),
+                style: TextStyle(color: context.colors.error),
               ),
               onTap: () async {
                 Navigator.of(context).pop();
@@ -259,9 +256,9 @@ class PlaylistsScreen extends ConsumerWidget {
                       ),
                       borderRadius: BorderRadius.circular(8),
                     ),
-                    child: const Icon(
+                    child: Icon(
                       Icons.queue_music_rounded,
-                      color: Colors.white,
+                      color: context.colors.textPrimary,
                       size: 28,
                     ),
                   ),
@@ -475,7 +472,10 @@ class PlaylistsScreen extends ConsumerWidget {
                 Navigator.pop(context); // Close the playlist detail as well
               }
             },
-            child: const Text('Remove', style: TextStyle(color: Colors.red)),
+            child: Text(
+              'Remove',
+              style: TextStyle(color: context.colors.error),
+            ),
           ),
         ],
       ),

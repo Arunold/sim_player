@@ -23,7 +23,7 @@ class CustomSearchBar extends StatelessWidget {
     return Container(
       height: 48,
       decoration: BoxDecoration(
-        color: ThemeConstants.darkCard,
+        color: context.colors.card,
         borderRadius: BorderRadius.circular(ThemeConstants.radiusMd),
       ),
       child: TextField(

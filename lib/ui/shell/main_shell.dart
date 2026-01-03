@@ -80,9 +80,9 @@ class AppBarWidget extends StatelessWidget {
     return Container(
       padding: EdgeInsets.only(top: MediaQuery.of(context).padding.top),
       decoration: BoxDecoration(
-        color: ThemeConstants.darkSurface,
+        color: context.colors.surface,
         border: Border(
-          bottom: BorderSide(color: ThemeConstants.darkDivider, width: 0.5),
+          bottom: BorderSide(color: context.colors.divider, width: 0.5),
         ),
       ),
       child: SizedBox(

@@ -18,7 +18,7 @@ class QueueScreen extends ConsumerStatefulWidget {
     Navigator.of(context).push(
       PageRouteBuilder(
         opaque: false,
-        barrierColor: Colors.black54,
+        barrierColor: context.colors.backgroundTertiary,
         pageBuilder: (context, animation, secondaryAnimation) {
           return const QueueScreen();
         },
@@ -351,9 +351,7 @@ class _QueueScreenState extends ConsumerState<QueueScreen> {
                 Navigator.pop(context);
               }
             },
-            style: TextButton.styleFrom(
-              foregroundColor: ThemeConstants.errorColor,
-            ),
+            style: TextButton.styleFrom(foregroundColor: context.colors.error),
             child: const Text('Clear'),
           ),
         ],
@@ -389,10 +387,14 @@ class _QueueSongItem extends ConsumerWidget {
         alignment: Alignment.centerRight,
         padding: const EdgeInsets.only(right: 24),
         decoration: BoxDecoration(
-          color: ThemeConstants.errorColor.withValues(alpha: 0.8),
+          color: context.colors.backgroundTertiary.withAlpha(125),
           borderRadius: BorderRadius.circular(ThemeConstants.radiusSm),
         ),
-        child: const Icon(Icons.delete_rounded, color: Colors.white, size: 28),
+        child: Icon(
+          Icons.delete_rounded,
+          color: context.colors.error,
+          size: 28,
+        ),
       ),
       confirmDismiss: (direction) async {
         onRemove();

@@ -1,18 +1,26 @@
-import 'dart:io';
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:sim_player/core/constants/app_constants.dart';
 import 'package:sim_player/core/theme/glass_style.dart';
 import '../../core/constants/theme_constants.dart';
 import '../../core/routes/app_routes.dart';
 import '../../providers/providers.dart';
+import 'mini_player.dart';
 
 /// Side navigation drawer widget with route-based navigation
 class SideNav extends ConsumerWidget {
   final String currentRoute;
 
-  const SideNav({super.key, required this.currentRoute});
+  /// Width as percentage of screen width (0.0 to 1.0). Default is 0.75 (75%)
+  final double widthPercent;
+
+  const SideNav({
+    super.key,
+    required this.currentRoute,
+    this.widthPercent = 0.85,
+  });
 
   void _navigateTo(BuildContext context, String route) {
     Navigator.pop(context); // Close drawer first
@@ -39,10 +47,13 @@ class SideNav extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final currentSongAsync = ref.watch(currentSongProvider);
+    final screenWidth = MediaQuery.of(context).size.width;
+    final drawerWidth = screenWidth * widthPercent.clamp(0.2, 0.95);
+
     return GlassContainer.sideNav(
       child: Drawer(
-        backgroundColor: context.colors.surface.withAlpha(1),
+        width: drawerWidth,
+        backgroundColor: Colors.transparent,
         child: SafeArea(
           child: Column(
             children: [
@@ -85,14 +96,14 @@ class SideNav extends ConsumerWidget {
                   ],
                 ),
               ),
-              // Mini player in drawer
-              currentSongAsync.when(
-                data: (song) {
-                  if (song == null) return const SizedBox.shrink();
-                  return _SideNavMiniPlayer(song: song);
+              // Mini player in drawer - reuse the main MiniPlayer in compact mode
+              MiniPlayer(
+                compact: true,
+                useGlassContainer: false,
+                onTap: () {
+                  Navigator.pop(context); // Close drawer
+                  Navigator.pushNamed(context, AppRoutes.nowPlaying);
                 },
-                loading: () => const SizedBox.shrink(),
-                error: (_, __) => const SizedBox.shrink(),
               ),
             ],
           ),
@@ -117,16 +128,21 @@ class SideNav extends ConsumerWidget {
             height: 48,
             decoration: BoxDecoration(
               gradient: LinearGradient(
-                colors: [context.colors.primary, context.colors.secondary],
+                colors: [
+                  context.colors.primary,
+                  context.colors.secondary,
+                  context.colors.accent,
+                  context.colors.error,
+                ],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               ),
               borderRadius: BorderRadius.circular(12),
             ),
-            child: const Icon(
+            child: Icon(
               Icons.music_note_rounded,
-              color: Colors.white,
-              size: 28,
+              color: context.colors.textPrimary,
+              size: 30,
             ),
           ),
           const SizedBox(width: 16),
@@ -135,14 +151,14 @@ class SideNav extends ConsumerWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'SimPlayer',
+                  AppConstants.appName,
                   style: Theme.of(context).textTheme.titleLarge?.copyWith(
                     fontWeight: FontWeight.bold,
                     color: context.colors.textPrimary,
                   ),
                 ),
                 Text(
-                  'Your music, your way',
+                  AppConstants.appTagline,
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
                     color: context.colors.textSecondary,
                   ),
@@ -192,159 +208,36 @@ class _NavItemTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 2),
       child: Material(
         color: Colors.transparent,
         child: ListTile(
+          contentPadding: const EdgeInsets.symmetric(
+            vertical: 0,
+            horizontal: 10,
+          ),
           leading: Icon(
             isSelected ? item.selectedIcon : item.icon,
             color: isSelected
                 ? context.colors.primary
-                : context.colors.textSecondary,
+                : context.colors.textPrimary,
           ),
           title: Text(
             item.label,
-            style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+            style: Theme.of(context).textTheme.titleMedium?.copyWith(
               color: isSelected
                   ? context.colors.primary
-                  : context.colors.textSecondary,
-              fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+                  : context.colors.textPrimary,
+              fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
             ),
           ),
           selected: isSelected,
-          selectedTileColor: context.colors.primary.withValues(alpha: 0.15),
+          selectedTileColor: context.colors.primary.withValues(alpha: 0.20),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(ThemeConstants.radiusMedium),
           ),
           onTap: onTap,
         ),
-      ),
-    );
-  }
-}
-
-/// Mini player shown at bottom of side nav
-class _SideNavMiniPlayer extends ConsumerWidget {
-  final dynamic song;
-
-  const _SideNavMiniPlayer({required this.song});
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    return GestureDetector(
-      onTap: () {
-        Navigator.pop(context); // Close drawer
-        Navigator.pushNamed(context, AppRoutes.nowPlaying);
-      },
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: ThemeConstants.darkCard,
-          border: Border(
-            top: BorderSide(color: ThemeConstants.darkDivider, width: 1),
-          ),
-        ),
-        child: Row(
-          children: [
-            // Album art
-            Container(
-              width: 48,
-              height: 48,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(ThemeConstants.radiusSm),
-                color: ThemeConstants.darkSurface,
-              ),
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(ThemeConstants.radiusSm),
-                child: song.artworkPath != null
-                    ? Image.file(
-                        File(song.artworkPath!),
-                        fit: BoxFit.cover,
-                        errorBuilder: (_, __, ___) =>
-                            _buildPlaceholder(context),
-                      )
-                    : _buildPlaceholder(context),
-              ),
-            ),
-            const SizedBox(width: 12),
-            // Song info
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    song.title,
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      fontWeight: FontWeight.w500,
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  Text(
-                    song.artist,
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: context.colors.textSecondary,
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  Text(
-                    '${song.album}${song.year != null ? ' • ${song.year}' : ''}',
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: context.colors.textSecondary.withValues(
-                        alpha: 0.7,
-                      ),
-                      fontSize: 12,
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ],
-              ),
-            ),
-            // Play/Pause button
-            Consumer(
-              builder: (context, ref, _) {
-                final playerState = ref.watch(playerStateProvider);
-                return playerState.when(
-                  data: (state) {
-                    final isPlaying = state.isPlaying;
-                    return IconButton(
-                      onPressed: () {
-                        final controller = ref.read(audioControllerProvider);
-                        if (isPlaying) {
-                          controller.pause();
-                        } else {
-                          controller.play();
-                        }
-                      },
-                      icon: Icon(
-                        isPlaying
-                            ? Icons.pause_rounded
-                            : Icons.play_arrow_rounded,
-                        color: context.colors.primary,
-                      ),
-                    );
-                  },
-                  loading: () => const SizedBox.shrink(),
-                  error: (_, __) => const SizedBox.shrink(),
-                );
-              },
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildPlaceholder(BuildContext context) {
-    return Container(
-      color: context.colors.card,
-      child: Icon(
-        Icons.music_note_rounded,
-        color: context.colors.textSecondary.withValues(alpha: 0.5),
-        size: 24,
       ),
     );
   }

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:sim_player/core/constants/app_constants.dart';
 import '../../core/constants/theme_constants.dart';
 
 /// Splash screen shown when the app launches
@@ -108,10 +109,10 @@ class _SplashScreenState extends State<SplashScreen>
                               ),
                             ],
                           ),
-                          child: const Icon(
+                          child: Icon(
                             Icons.music_note_rounded,
                             size: 60,
-                            color: Colors.white,
+                            color: context.colors.textPrimary,
                           ),
                         ),
                       ),
@@ -122,12 +123,12 @@ class _SplashScreenState extends State<SplashScreen>
                       offset: Offset(0, _slideAnimation.value),
                       child: Opacity(
                         opacity: _fadeAnimation.value,
-                        child: const Text(
+                        child: Text(
                           'SimPlayer',
                           style: TextStyle(
                             fontSize: 36,
                             fontWeight: FontWeight.bold,
-                            color: Colors.white,
+                            color: context.colors.textPrimary,
                             letterSpacing: 2,
                           ),
                         ),
@@ -140,10 +141,10 @@ class _SplashScreenState extends State<SplashScreen>
                       child: Opacity(
                         opacity: _fadeAnimation.value,
                         child: Text(
-                          'Your Music, Your Way',
+                          AppConstants.appTagline,
                           style: TextStyle(
                             fontSize: 16,
-                            color: Colors.white.withValues(alpha: 0.7),
+                            color: context.colors.textSecondary,
                             letterSpacing: 1,
                           ),
                         ),
@@ -156,7 +157,7 @@ class _SplashScreenState extends State<SplashScreen>
                       child: SizedBox(
                         width: 150,
                         child: LinearProgressIndicator(
-                          backgroundColor: Colors.white.withValues(alpha: 0.2),
+                          backgroundColor: context.colors.textTertiary,
                           valueColor: AlwaysStoppedAnimation<Color>(
                             context.colors.primary,
                           ),

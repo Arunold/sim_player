@@ -4,6 +4,13 @@ class AppConstants {
 
   // App Info
   static const String appName = 'SimPlayer';
+  static const String appDescription =
+      'Music carries us through life—the highs, the lows, and everything in between. SimPlayer is just here to play it, nothing more.';
+  static const String appTagline = 'Simply Your Music';
+  static const String appCopyright = '© 2024 SimPlayer Team';
+  static const String appWebsite = 'https://simplayer.app';
+  static const String appAuthor = 'SimPlayer Team';
+  static const String appPackageName = 'com.simplayer.app';
   static const String appVersion = '1.0.0';
 
   // Hive Box Names

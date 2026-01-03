@@ -72,7 +72,7 @@ class SongTile extends ConsumerWidget {
           height: 60,
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(ThemeConstants.radiusSm),
-            color: ThemeConstants.darkCard,
+            color: context.colors.card,
           ),
           child: ClipRRect(
             borderRadius: BorderRadius.circular(ThemeConstants.radiusSm),
@@ -85,7 +85,7 @@ class SongTile extends ConsumerWidget {
             child: Container(
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(ThemeConstants.radiusSm),
-                color: Colors.black.withValues(alpha: 0.5),
+                color: context.colors.backgroundSecondary,
               ),
               child: Center(
                 child: PlayingIndicator(
@@ -113,7 +113,7 @@ class SongTile extends ConsumerWidget {
 
   Widget _buildPlaceholder(BuildContext context) {
     return Container(
-      color: ThemeConstants.darkCard,
+      color: context.colors.card,
       child: Icon(
         Icons.music_note_rounded,
         color: context.colors.textSecondary.withValues(alpha: 0.5),
@@ -141,14 +141,14 @@ class SongTile extends ConsumerWidget {
 
 /// Animated playing indicator with bouncing bars
 class PlayingIndicator extends StatefulWidget {
-  final Color color;
+  final Color? color;
   final int barCount;
   final double size;
   final bool paused;
 
   const PlayingIndicator({
     super.key,
-    this.color = Colors.white,
+    this.color,
     this.barCount = 3,
     this.size = 16,
     this.paused = false,
@@ -243,7 +243,7 @@ class _PlayingIndicatorState extends State<PlayingIndicator>
                 width: barWidth,
                 height: widget.size * 0.75 * _animations[index].value,
                 decoration: BoxDecoration(
-                  color: widget.color,
+                  color: widget.color ?? context.colors.primary,
                   borderRadius: BorderRadius.circular(barWidth / 2),
                 ),
               );
