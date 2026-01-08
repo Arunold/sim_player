@@ -68,10 +68,60 @@ class _SimPlayerAppState extends ConsumerState<SimPlayerApp> {
 
     // Initialize audio service
     await ref.read(audioServiceProvider).init();
+    
+    // Apply saved audio settings
+    _applyAudioSettings();
 
     setState(() {
       _initialized = true;
     });
+
+    // Auto-scan on startup if enabled
+    _checkAutoScan();
+  }
+  
+  void _applyAudioSettings() {
+    final audioService = ref.read(audioServiceProvider);
+    
+    // Apply skip silence setting
+    final skipSilence = ref.read(skipSilenceProvider);
+    audioService.setSkipSilence(skipSilence);
+    
+    // Apply playback speed setting
+    final playbackSpeed = ref.read(playbackSpeedProvider);
+    audioService.setSpeed(playbackSpeed);
+    
+    // Apply fade on pause/play setting
+    final fadeOnPausePlay = ref.read(fadeOnPausePlayProvider);
+    audioService.setFadeOnPausePlay(fadeOnPausePlay);
+    
+    // Resume playback if enabled
+    final resumeOnRestart = ref.read(resumeOnRestartProvider);
+    if (resumeOnRestart) {
+      // Check if there's a queue to resume
+      final queue = audioService.queue;
+      if (queue.songIds.isNotEmpty && queue.currentSongId != null) {
+        // Resume playback (not starting from beginning)
+        audioService.play();
+      }
+    }
+  }
+
+  Future<void> _checkAutoScan() async {
+    final autoScan = ref.read(autoScanOnStartupProvider);
+    if (autoScan) {
+      final fileScanner = ref.read(fileScannerServiceProvider);
+      final musicFolders = ref.read(musicFoldersProvider);
+      final minDuration = ref.read(minFileDurationProvider);
+      
+      await fileScanner.scanDevice(
+        folders: musicFolders,
+        minDurationSeconds: minDuration,
+      );
+      
+      // Refresh songs after scan
+      ref.read(songsProvider.notifier).refresh();
+    }
   }
 
   void _onSplashComplete() {

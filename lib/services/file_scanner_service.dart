@@ -18,7 +18,7 @@ class FileScannerService {
 
   final _progressController = StreamController<ScanProgress>.broadcast();
   final _completeController = StreamController<ScanResult>.broadcast();
-  final _isScanningController = StreamController<bool>.broadcast();
+  late final StreamController<bool> _isScanningController;
 
   Stream<ScanProgress> get progressStream => _progressController.stream;
   Stream<ScanResult> get completeStream => _completeController.stream;
@@ -30,7 +30,11 @@ class FileScannerService {
   bool get isScanning => _isScanning;
 
   FileScannerService(this._songRepository, {MetadataService? metadataService})
-      : _metadataService = metadataService ?? MetadataService();
+      : _metadataService = metadataService ?? MetadataService() {
+    // Initialize with false so stream has an initial value
+    _isScanningController = StreamController<bool>.broadcast();
+    _isScanningController.add(false);
+  }
 
   /// Initialize artwork cache directory
   Future<String> _getArtworkCacheDir() async {
@@ -59,37 +63,63 @@ class FileScannerService {
     return null;
   }
 
-  /// Scan common music directories on the device
-  Future<ScanResult> scanDevice() async {
-    // Common music directories on Android
-    final musicDirs = [
-      '/storage/emulated/0/Music',
-      '/storage/emulated/0/Download',
-      '/storage/emulated/0/Downloads',
-      '/sdcard/Music',
-      '/sdcard/Download',
-    ];
+  /// Scan music directories on the device
+  /// If [folders] is provided, scan those folders; otherwise scan default folders
+  /// If [minDurationSeconds] is provided, skip files shorter than this duration
+  Future<ScanResult> scanDevice({List<String>? folders, int minDurationSeconds = 0}) async {
+    if (_isScanning) {
+      return ScanResult(
+        totalFound: 0,
+        newSongs: 0,
+        updatedSongs: 0,
+        failedFiles: 0,
+        duration: Duration.zero,
+        cancelled: true,
+      );
+    }
+
+    _isScanning = true;
+    _isScanningController.add(true);
+    _cancelRequested = false;
+
+    // Use provided folders or default ones
+    final musicDirs = folders ??
+        [
+          '/storage/emulated/0/Music',
+          '/storage/emulated/0/Download',
+          '/storage/emulated/0/Downloads',
+          '/sdcard/Music',
+          '/sdcard/Download',
+        ];
 
     int totalNew = 0;
     int totalUpdated = 0;
     int totalFailed = 0;
     int totalFound = 0;
+    int totalSkipped = 0;
     final stopwatch = Stopwatch()..start();
 
-    for (final dirPath in musicDirs) {
-      final dir = Directory(dirPath);
-      if (await dir.exists()) {
-        final result = await scanDirectory(dirPath);
-        totalNew += result.newSongs;
-        totalUpdated += result.updatedSongs;
-        totalFailed += result.failedFiles;
-        totalFound += result.totalFound;
+    try {
+      for (final dirPath in musicDirs) {
+        if (_cancelRequested) break;
+
+        final dir = Directory(dirPath);
+        if (await dir.exists()) {
+          final result = await _scanDirectoryInternal(dirPath, minDurationSeconds: minDurationSeconds);
+          totalNew += result.newSongs;
+          totalUpdated += result.updatedSongs;
+          totalFailed += result.failedFiles;
+          totalFound += result.totalFound;
+          totalSkipped += result.skippedFiles;
+        }
       }
+    } finally {
+      _isScanning = false;
+      _isScanningController.add(false);
+      stopwatch.stop();
     }
 
-    stopwatch.stop();
-
-    return ScanResult(
+    final result = ScanResult(
       totalFound: totalFound,
       newSongs: totalNew,
       updatedSongs: totalUpdated,
@@ -97,9 +127,12 @@ class FileScannerService {
       duration: stopwatch.elapsed,
       cancelled: _cancelRequested,
     );
+
+    _completeController.add(result);
+    return result;
   }
 
-  /// Scan a directory for music files
+  /// Scan a directory for music files (public API)
   Future<ScanResult> scanDirectory(String directoryPath) async {
     if (_isScanning) {
       return ScanResult(
@@ -117,10 +150,37 @@ class FileScannerService {
     _cancelRequested = false;
 
     final stopwatch = Stopwatch()..start();
+    
+    try {
+      final result = await _scanDirectoryInternal(directoryPath);
+      stopwatch.stop();
+      
+      final finalResult = ScanResult(
+        totalFound: result.totalFound,
+        newSongs: result.newSongs,
+        updatedSongs: result.updatedSongs,
+        failedFiles: result.failedFiles,
+        skippedFiles: result.skippedFiles,
+        duration: stopwatch.elapsed,
+        cancelled: _cancelRequested,
+      );
+      
+      _completeController.add(finalResult);
+      return finalResult;
+    } finally {
+      _isScanning = false;
+      _isScanningController.add(false);
+    }
+  }
+
+  /// Internal scan method used by scanDevice (no state management)
+  Future<ScanResult> _scanDirectoryInternal(String directoryPath, {int minDurationSeconds = 0}) async {
+    final stopwatch = Stopwatch()..start();
     int totalFound = 0;
     int newSongs = 0;
     int updatedSongs = 0;
     int failedFiles = 0;
+    int skippedFiles = 0;
     final List<Song> songsToSave = [];
 
     try {
@@ -165,6 +225,12 @@ class FileScannerService {
           );
 
           if (song != null) {
+            // Check minimum duration filter
+            if (minDurationSeconds > 0 && song.duration.inSeconds < minDurationSeconds) {
+              skippedFiles++;
+              continue;
+            }
+            
             songsToSave.add(song);
             if (existingSong != null) {
               updatedSongs++;
@@ -201,23 +267,18 @@ class FileScannerService {
       }
     } catch (e) {
       // Handle directory errors
-    } finally {
-      _isScanning = false;
-      _isScanningController.add(false);
-      stopwatch.stop();
     }
 
-    final result = ScanResult(
+    stopwatch.stop();
+    return ScanResult(
       totalFound: totalFound,
       newSongs: newSongs,
       updatedSongs: updatedSongs,
       failedFiles: failedFiles,
+      skippedFiles: skippedFiles,
       duration: stopwatch.elapsed,
       cancelled: _cancelRequested,
     );
-
-    _completeController.add(result);
-    return result;
   }
 
   /// Cancel ongoing scan
@@ -392,6 +453,7 @@ class ScanResult {
   final int newSongs;
   final int updatedSongs;
   final int failedFiles;
+  final int skippedFiles;
   final Duration duration;
   final bool cancelled;
 
@@ -400,6 +462,7 @@ class ScanResult {
     required this.newSongs,
     required this.updatedSongs,
     required this.failedFiles,
+    this.skippedFiles = 0,
     required this.duration,
     this.cancelled = false,
   });

@@ -4,6 +4,7 @@ import 'package:sim_player/core/constants/app_constants.dart';
 import '../../core/constants/theme_constants.dart';
 import '../../core/routes/app_routes.dart';
 import '../../providers/providers.dart';
+import '../../providers/settings_providers.dart';
 import '../../services/file_scanner_service.dart';
 import '../widgets/mini_player.dart';
 import '../widgets/side_nav.dart';
@@ -23,46 +24,80 @@ class ShellWrapper extends ConsumerStatefulWidget {
 class _ShellWrapperState extends ConsumerState<ShellWrapper> {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
+  Future<bool> _onWillPop() async {
+    final confirmExit = ref.read(confirmExitProvider);
+    if (!confirmExit) return true;
+
+    final result = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Exit App'),
+        content: const Text('Are you sure you want to exit?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: const Text('Exit'),
+          ),
+        ],
+      ),
+    );
+    return result ?? false;
+  }
+
   @override
   Widget build(BuildContext context) {
     final fileScanner = ref.watch(fileScannerServiceProvider);
     final showProfile = widget.route != AppRoutes.profile;
 
-    return Scaffold(
-      key: _scaffoldKey,
-      drawer: SideNav(currentRoute: widget.route),
-      body: Stack(
-        children: [
-          // Main content column - extends behind mini player for blur effect
-          Column(
-            children: [
-              // App Bar
-              AppBarWidget(
-                scaffoldKey: _scaffoldKey,
-                title: AppRoutes.getTitle(widget.route),
-                showProfile: showProfile,
-              ),
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) async {
+        if (didPop) return;
+        final shouldPop = await _onWillPop();
+        if (shouldPop && context.mounted) {
+          Navigator.of(context).pop();
+        }
+      },
+      child: Scaffold(
+        key: _scaffoldKey,
+        drawer: SideNav(currentRoute: widget.route),
+        body: Stack(
+          children: [
+            // Main content column - extends behind mini player for blur effect
+            Column(
+              children: [
+                // App Bar
+                AppBarWidget(
+                  scaffoldKey: _scaffoldKey,
+                  title: AppRoutes.getTitle(widget.route),
+                  showProfile: showProfile,
+                ),
 
-              // Scanning indicator
-              ScanningIndicator(fileScanner: fileScanner),
+                // Scanning indicator
+                ScanningIndicator(fileScanner: fileScanner),
 
-              // Screen content - full height, scrollable content handles its own bottom padding
-              Expanded(child: widget.child),
+                // Screen content - full height, scrollable content handles its own bottom padding
+                Expanded(child: widget.child),
 
-              // Bottom padding for mini player
-              const SizedBox(height: AppConstants.miniPlayerHeight + 10),
-            ],
-          ),
-          // Mini player overlay at bottom
-          Positioned(
-            left: 0,
-            right: 0,
-            bottom: 0,
-            child: MiniPlayer(
-              onTap: () => Navigator.pushNamed(context, AppRoutes.nowPlaying),
+                // Bottom padding for mini player
+                const SizedBox(height: AppConstants.miniPlayerHeight + 10),
+              ],
             ),
-          ),
-        ],
+            // Mini player overlay at bottom
+            Positioned(
+              left: 0,
+              right: 0,
+              bottom: 0,
+              child: MiniPlayer(
+                onTap: () => Navigator.pushNamed(context, AppRoutes.nowPlaying),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

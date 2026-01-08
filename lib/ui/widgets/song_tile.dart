@@ -12,6 +12,7 @@ class SongTile extends ConsumerWidget {
   final VoidCallback? onTap;
   final VoidCallback? onLongPress;
   final Widget? trailing;
+  final int? trackNumber;
 
   const SongTile({
     super.key,
@@ -19,6 +20,7 @@ class SongTile extends ConsumerWidget {
     this.onTap,
     this.onLongPress,
     this.trailing,
+    this.trackNumber,
   });
 
   @override
@@ -28,6 +30,7 @@ class SongTile extends ConsumerWidget {
     final isPlaying = playerState.valueOrNull?.isPlaying ?? false;
     final currentSong = ref.watch(currentSongProvider).valueOrNull;
     final isSelected = currentSong?.id == song.id;
+    final showTrackNumbers = ref.watch(showTrackNumbersProvider);
 
     return ListTile(
       horizontalTitleGap: 10,
@@ -38,7 +41,7 @@ class SongTile extends ConsumerWidget {
         horizontal: ThemeConstants.spacingSm,
         vertical: ThemeConstants.spacingXs,
       ),
-      leading: _buildArtwork(context, isSelected, isPlaying),
+      leading: _buildLeading(context, isSelected, isPlaying, showTrackNumbers),
       title: Text(song.title, maxLines: 1, overflow: TextOverflow.ellipsis),
       subtitle: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -61,6 +64,56 @@ class SongTile extends ConsumerWidget {
       trailing: trailing ?? _buildTrailing(context, isSelected),
       onTap: onTap,
       onLongPress: onLongPress,
+    );
+  }
+
+  Widget _buildLeading(BuildContext context, bool isSelected, bool isPlaying, bool showTrackNumbers) {
+    if (showTrackNumbers && trackNumber != null) {
+      return SizedBox(
+        width: 60,
+        height: 60,
+        child: Row(
+          children: [
+            SizedBox(
+              width: 24,
+              child: Center(
+                child: isSelected
+                    ? PlayingIndicator(
+                        color: context.colors.primary,
+                        barCount: 3,
+                        size: 20,
+                        paused: !isPlaying,
+                      )
+                    : Text(
+                        trackNumber.toString(),
+                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          color: context.colors.textSecondary,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+              ),
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: _buildSmallArtwork(context),
+            ),
+          ],
+        ),
+      );
+    }
+    return _buildArtwork(context, isSelected, isPlaying);
+  }
+
+  Widget _buildSmallArtwork(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(ThemeConstants.radiusSm),
+        color: context.colors.card,
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(ThemeConstants.radiusSm),
+        child: _getAlbumArt(context, song.artworkPath),
+      ),
     );
   }
 

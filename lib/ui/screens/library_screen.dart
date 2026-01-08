@@ -5,6 +5,7 @@ import '../../core/constants/theme_constants.dart';
 import '../../data/models/library_category.dart';
 import '../../data/models/song.dart';
 import '../../providers/providers.dart';
+import '../../providers/settings_providers.dart';
 import '../widgets/widgets.dart';
 import 'browse_screen.dart';
 import 'songs_list_screen.dart';
@@ -163,14 +164,16 @@ class LibraryScreen extends ConsumerWidget {
     List<LibraryCategory> categories,
     Map<LibraryCategory, int> counts,
   ) {
+    final gridColumns = ref.watch(gridColumnCountProvider);
+    
     return SliverPadding(
       padding: const EdgeInsets.symmetric(horizontal: ThemeConstants.spacingLg),
       sliver: SliverGrid(
-        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: 2,
+        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: gridColumns,
           mainAxisSpacing: ThemeConstants.spacingMd,
           crossAxisSpacing: ThemeConstants.spacingMd,
-          childAspectRatio: 1.3,
+          childAspectRatio: gridColumns == 2 ? 1.3 : (gridColumns == 3 ? 1.1 : 0.95),
         ),
         delegate: SliverChildListDelegate(
           categories.map((category) {
