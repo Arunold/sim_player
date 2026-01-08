@@ -99,6 +99,8 @@ class AudioController {
   Future<void> skipToPrevious() => _audioService.skipToPrevious();
   Future<void> setVolume(double volume) => _audioService.setVolume(volume);
   Future<void> setSpeed(double speed) => _audioService.setSpeed(speed);
+  Future<void> setSkipSilence(bool enabled) => _audioService.setSkipSilence(enabled);
+  void setFadeOnPausePlay(bool enabled) => _audioService.setFadeOnPausePlay(enabled);
   void setRepeatMode(RepeatMode mode) => _audioService.setRepeatMode(mode);
   void cycleRepeatMode() => _audioService.cycleRepeatMode();
   Future<void> toggleShuffle() => _audioService.toggleShuffle();

@@ -15,6 +15,10 @@ class AudioService {
   PlaybackQueue _queue = const PlaybackQueue(songIds: []);
   AppPlayerState _playerState = const AppPlayerState();
 
+  // Settings
+  bool _fadeOnPausePlay = false;
+  static const Duration _fadeDuration = Duration(milliseconds: 300);
+
   // Persistence box
   late Box _queueBox;
 
@@ -220,8 +224,17 @@ class AudioService {
 
   Future<void> play() async {
     if (_queue.isEmpty) return;
-    await _player.play();
-    _updatePlayerState(status: PlaybackStatus.playing);
+    
+    if (_fadeOnPausePlay) {
+      // Start at low volume and fade in
+      await _player.setVolume(0.0);
+      await _player.play();
+      _updatePlayerState(status: PlaybackStatus.playing);
+      await _fadeVolume(0.0, _playerState.volume);
+    } else {
+      await _player.play();
+      _updatePlayerState(status: PlaybackStatus.playing);
+    }
 
     // Record play count
     final songId = _queue.currentSongId;
@@ -231,8 +244,30 @@ class AudioService {
   }
 
   Future<void> pause() async {
-    await _player.pause();
+    if (_fadeOnPausePlay) {
+      // Fade out before pausing
+      final currentVolume = _playerState.volume;
+      await _fadeVolume(currentVolume, 0.0);
+      await _player.pause();
+      // Restore volume for next play
+      await _player.setVolume(currentVolume);
+    } else {
+      await _player.pause();
+    }
     _updatePlayerState(status: PlaybackStatus.paused);
+  }
+
+  /// Smoothly fade volume from one level to another
+  Future<void> _fadeVolume(double from, double to) async {
+    const steps = 10;
+    final stepDuration = _fadeDuration ~/ steps;
+    final volumeStep = (to - from) / steps;
+
+    for (int i = 1; i <= steps; i++) {
+      final volume = from + (volumeStep * i);
+      await _player.setVolume(volume.clamp(0.0, 1.0));
+      await Future.delayed(stepDuration);
+    }
   }
 
   Future<void> togglePlayPause() async {
@@ -273,6 +308,16 @@ class AudioService {
     final clampedSpeed = speed.clamp(0.5, 2.0);
     await _player.setSpeed(clampedSpeed);
     _updatePlayerState(speed: clampedSpeed);
+  }
+
+  /// Enable or disable skip silence feature
+  Future<void> setSkipSilence(bool enabled) async {
+    await _player.setSkipSilenceEnabled(enabled);
+  }
+
+  /// Enable or disable fade on play/pause
+  void setFadeOnPausePlay(bool enabled) {
+    _fadeOnPausePlay = enabled;
   }
 
   void setRepeatMode(RepeatMode mode) {

@@ -7,6 +7,7 @@ import '../../core/constants/theme_constants.dart';
 import '../../data/models/library_category.dart';
 import '../../data/models/song.dart';
 import '../../providers/providers.dart';
+import '../../providers/settings_providers.dart';
 import '../widgets/widgets.dart';
 import 'songs_list_screen.dart';
 
@@ -111,7 +112,7 @@ class BrowseScreen extends ConsumerWidget {
 
                 // Grid or List view
                 if (isGridView)
-                  _buildGridSliver(context, items, config)
+                  _buildGridSliver(context, ref, items, config)
                 else
                   _buildListSliver(context, items, config),
               ],
@@ -191,17 +192,20 @@ class BrowseScreen extends ConsumerWidget {
 
   Widget _buildGridSliver(
     BuildContext context,
+    WidgetRef ref,
     List<BrowseItem> items,
     CategoryConfig config,
   ) {
+    final gridColumns = ref.watch(gridColumnCountProvider);
+    
     return SliverPadding(
       padding: const EdgeInsets.symmetric(horizontal: ThemeConstants.spacingLg),
       sliver: SliverGrid(
-        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: 2,
+        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: gridColumns,
           mainAxisSpacing: ThemeConstants.spacingMd,
           crossAxisSpacing: ThemeConstants.spacingMd,
-          childAspectRatio: 1.3,
+          childAspectRatio: gridColumns == 2 ? 1.3 : (gridColumns == 3 ? 1.1 : 0.95),
         ),
         delegate: SliverChildBuilderDelegate((context, index) {
           final item = items[index];
