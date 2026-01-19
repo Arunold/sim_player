@@ -4,7 +4,6 @@ import 'package:sim_player/core/constants/app_constants.dart';
 import '../../core/constants/theme_constants.dart';
 import '../../core/routes/app_routes.dart';
 import '../../providers/providers.dart';
-import '../../providers/settings_providers.dart';
 import '../../services/file_scanner_service.dart';
 import '../widgets/mini_player.dart';
 import '../widgets/side_nav.dart';

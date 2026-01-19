@@ -5,7 +5,6 @@ import '../../core/constants/theme_constants.dart';
 import '../../data/models/library_category.dart';
 import '../../data/models/song.dart';
 import '../../providers/providers.dart';
-import '../../providers/settings_providers.dart';
 import '../widgets/widgets.dart';
 import 'browse_screen.dart';
 import 'songs_list_screen.dart';

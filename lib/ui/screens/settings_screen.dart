@@ -5,7 +5,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/constants/app_constants.dart';
 import '../../core/constants/theme_constants.dart';
 import '../../providers/providers.dart';
-import '../../providers/settings_providers.dart';
 
 /// Settings screen for app configuration
 class SettingsScreen extends ConsumerWidget {
