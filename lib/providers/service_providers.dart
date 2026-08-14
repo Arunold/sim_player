@@ -22,7 +22,9 @@ final audioServiceProvider = Provider<AudioService>((ref) {
 /// File Scanner Service Provider
 final fileScannerServiceProvider = Provider<FileScannerService>((ref) {
   final songRepository = ref.watch(songRepositoryProvider);
-  return FileScannerService(songRepository);
+  final fileScanner = FileScannerService(songRepository);
+  ref.onDispose(() => fileScanner.dispose());
+  return fileScanner;
 });
 
 /// Scanning State Provider - tracks if scanning is in progress

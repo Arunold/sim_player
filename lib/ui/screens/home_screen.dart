@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/constants/theme_constants.dart';
@@ -272,8 +273,9 @@ class HomeScreen extends ConsumerWidget {
       });
 
       // Continue scan in background, refresh when done and cancel subscription
-      scanFuture.then((result) {
+      scanFuture.whenComplete(() {
         progressSubscription.cancel();
+      }).then((result) {
         ref.read(songsProvider.notifier).refresh();
         // Show completion snackbar
         if (context.mounted) {
@@ -348,6 +350,7 @@ class _ScanningDialog extends ConsumerStatefulWidget {
 
 class _ScanningDialogState extends ConsumerState<_ScanningDialog> {
   late final Stream<ScanResult> _completeStream;
+  late final StreamSubscription<ScanResult> _completeSubscription;
 
   @override
   void initState() {
@@ -355,11 +358,17 @@ class _ScanningDialogState extends ConsumerState<_ScanningDialog> {
     final fileScanner = ref.read(fileScannerServiceProvider);
     _completeStream = fileScanner.completeStream;
     // Listen for scan completion to auto-close dialog
-    _completeStream.listen((result) {
+    _completeSubscription = _completeStream.listen((result) {
       if (mounted) {
         Navigator.of(context).pop(false); // false = not running in background
       }
     });
+  }
+
+  @override
+  void dispose() {
+    _completeSubscription.cancel();
+    super.dispose();
   }
 
   @override

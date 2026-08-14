@@ -19,6 +19,9 @@ class AudioService {
   bool _fadeOnPausePlay = false;
   static const Duration _fadeDuration = Duration(milliseconds: 300);
 
+  // Subscriptions
+  final List<StreamSubscription> _subscriptions = [];
+
   // Persistence box
   late Box _queueBox;
 
@@ -49,33 +52,33 @@ class AudioService {
     await session.configure(const AudioSessionConfiguration.music());
 
     // Listen to player state changes
-    _player.playerStateStream.listen((state) {
+    _subscriptions.add(_player.playerStateStream.listen((state) {
       _updatePlayerState(status: _mapProcessingState(state.processingState));
-    });
+    }));
 
     // Listen to position changes
-    _player.positionStream.listen((position) {
+    _subscriptions.add(_player.positionStream.listen((position) {
       _updatePlayerState(position: position);
-    });
+    }));
 
     // Listen to buffered position
-    _player.bufferedPositionStream.listen((buffered) {
+    _subscriptions.add(_player.bufferedPositionStream.listen((buffered) {
       _updatePlayerState(bufferedPosition: buffered);
-    });
+    }));
 
     // Listen to duration changes
-    _player.durationStream.listen((duration) {
+    _subscriptions.add(_player.durationStream.listen((duration) {
       if (duration != null) {
         _updatePlayerState(duration: duration);
       }
-    });
+    }));
 
     // Listen for playback completion
-    _player.processingStateStream.listen((state) {
+    _subscriptions.add(_player.processingStateStream.listen((state) {
       if (state == ProcessingState.completed) {
         _onTrackCompleted();
       }
-    });
+    }));
 
     // Restore saved queue
     await _restoreQueue();
@@ -479,6 +482,10 @@ class AudioService {
   }
 
   void dispose() {
+    for (final sub in _subscriptions) {
+      sub.cancel();
+    }
+    _subscriptions.clear();
     _player.dispose();
     _queueController.close();
     _playerStateController.close();

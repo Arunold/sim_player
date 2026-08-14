@@ -89,6 +89,7 @@ graph TD
 *   **Dependencies:** Unused dependencies (`go_router`, `just_audio_background`, `cached_network_image`) have been removed, making the build leaner.
 *   **Settings Screen:** The formerly monolithic 1194-line `settings_screen.dart` has been decomposed into smaller, modular section widgets in `lib/ui/screens/settings/`.
 *   **Path Management:** Hardcoded Android paths in the `FileScannerService` and default settings have been replaced with platform-agnostic defaults using `path_provider`.
+*   **Resource Management:** Several stream subscription memory leaks were fixed in `AudioService`, `FileScannerService`, and `HomeScreen`. All `just_audio` player streams and file scanner controllers are now cleanly closed upon disposal.
 
 ### Known Technical Debt
 *   **Deprecated Widgets:** `RadioListTile.groupValue` is deprecated in Flutter 3.22+ and currently suppressed via `// ignore` comments. Future updates should migrate these to the new `RadioGroup` widget pattern.
