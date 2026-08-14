@@ -38,7 +38,7 @@ final isPlayingProvider = Provider<bool>((ref) {
   return playerState.when(
     data: (state) => state.isPlaying,
     loading: () => false,
-    error: (_, __) => false,
+    error: (_, _) => false,
   );
 });
 
@@ -48,7 +48,7 @@ final currentPositionProvider = Provider<Duration>((ref) {
   return playerState.when(
     data: (state) => state.position,
     loading: () => Duration.zero,
-    error: (_, __) => Duration.zero,
+    error: (_, _) => Duration.zero,
   );
 });
 
@@ -58,7 +58,7 @@ final currentDurationProvider = Provider<Duration>((ref) {
   return playerState.when(
     data: (state) => state.duration,
     loading: () => Duration.zero,
-    error: (_, __) => Duration.zero,
+    error: (_, _) => Duration.zero,
   );
 });
 
@@ -68,7 +68,7 @@ final repeatModeProvider = Provider<RepeatMode>((ref) {
   return playerState.when(
     data: (state) => state.repeatMode,
     loading: () => RepeatMode.off,
-    error: (_, __) => RepeatMode.off,
+    error: (_, _) => RepeatMode.off,
   );
 });
 
@@ -78,7 +78,7 @@ final shuffleEnabledProvider = Provider<bool>((ref) {
   return playerState.when(
     data: (state) => state.isShuffleEnabled,
     loading: () => false,
-    error: (_, __) => false,
+    error: (_, _) => false,
   );
 });
 

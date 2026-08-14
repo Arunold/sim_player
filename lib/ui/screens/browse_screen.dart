@@ -30,8 +30,18 @@ class BrowseItem {
   });
 }
 
+class BrowseViewModeNotifier extends Notifier<bool> {
+  @override
+  bool build() => true;
+
+  void toggle() {
+    state = !state;
+  }
+}
+
 /// Provider to track if browse screen is in grid or list view mode
-final browseViewModeProvider = StateProvider<bool>((ref) => true);
+final browseViewModeProvider =
+    NotifierProvider<BrowseViewModeNotifier, bool>(BrowseViewModeNotifier.new);
 
 /// A unified screen for browsing artists, albums, genres, or years
 /// Displays items in a grid/list and navigates to SongsListScreen on tap
@@ -89,8 +99,7 @@ class BrowseScreen extends ConsumerWidget {
                         // Grid/List toggle button
                         IconButton(
                           onPressed: () {
-                            ref.read(browseViewModeProvider.notifier).state =
-                                !isGridView;
+                            ref.read(browseViewModeProvider.notifier).toggle();
                           },
                           icon: Icon(
                             isGridView
@@ -265,7 +274,7 @@ class BrowseScreen extends ConsumerWidget {
             ? Image.file(
                 File(item.artworkPath!),
                 fit: BoxFit.cover,
-                errorBuilder: (_, __, ___) =>
+                errorBuilder: (_, _, _) =>
                     Icon(config.icon, color: config.color, size: 28),
               )
             : Icon(config.icon, color: config.color, size: 28),
@@ -291,7 +300,7 @@ class BrowseScreen extends ConsumerWidget {
             ? Image.file(
                 File(item.artworkPath!),
                 fit: BoxFit.cover,
-                errorBuilder: (_, __, ___) =>
+                errorBuilder: (_, _, _) =>
                     Icon(config.icon, color: config.color, size: 22),
               )
             : Icon(config.icon, color: config.color, size: 22),

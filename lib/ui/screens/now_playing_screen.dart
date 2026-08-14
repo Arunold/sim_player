@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' hide RepeatMode;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'dart:io';
 import 'dart:ui';
@@ -65,7 +65,7 @@ class NowPlayingScreen extends ConsumerWidget {
               child: Image.file(
                 File(song.artworkPath!),
                 fit: BoxFit.cover,
-                errorBuilder: (_, __, ___) => const SizedBox.shrink(),
+                errorBuilder: (_, _, _) => const SizedBox.shrink(),
               ),
             ),
           ),
@@ -158,7 +158,7 @@ class NowPlayingScreen extends ConsumerWidget {
                                 ? Image.file(
                                     File(song.artworkPath!),
                                     fit: BoxFit.cover,
-                                    errorBuilder: (_, __, ___) =>
+                                    errorBuilder: (_, _, _) =>
                                         _buildPlaceholder(context),
                                   )
                                 : _buildPlaceholder(context),
@@ -530,7 +530,7 @@ class NowPlayingScreen extends ConsumerWidget {
                 padding: EdgeInsets.all(ThemeConstants.spacingLg),
                 child: CircularProgressIndicator(),
               ),
-              error: (_, __) => const Padding(
+              error: (_, _) => const Padding(
                 padding: EdgeInsets.all(ThemeConstants.spacingLg),
                 child: Text('Error loading playlists'),
               ),

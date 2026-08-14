@@ -78,7 +78,7 @@ class SongsListScreen extends ConsumerWidget {
                             child: Image.file(
                               File(artworkPath!),
                               fit: BoxFit.cover,
-                              errorBuilder: (_, __, ___) =>
+                              errorBuilder: (_, _, _) =>
                                   _buildIconContainer(),
                             ),
                           ),

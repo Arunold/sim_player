@@ -40,11 +40,60 @@ const List<String> defaultMusicFolders = [
   '/storage/emulated/0/Downloads',
 ];
 
-/// Theme mode notifier for managing app theme
-class ThemeModeNotifier extends StateNotifier<ThemeMode> {
-  final Box _box;
+class SettingsValueNotifier<T> extends Notifier<T> {
+  SettingsValueNotifier(this._key, this._defaultValue);
 
-  ThemeModeNotifier(this._box) : super(_loadInitialTheme(_box));
+  final String _key;
+  final T _defaultValue;
+  late final Box _box;
+
+  @override
+  T build() {
+    final boxAsync = ref.watch(settingsBoxProvider);
+    return boxAsync.when(
+      data: (box) {
+        _box = box;
+        return _box.get(_key, defaultValue: _defaultValue) as T;
+      },
+      loading: () {
+        _box = Hive.box(SettingsKeys.boxName);
+        return _box.get(_key, defaultValue: _defaultValue) as T;
+      },
+      error: (_, _) {
+        _box = Hive.box(SettingsKeys.boxName);
+        return _box.get(_key, defaultValue: _defaultValue) as T;
+      },
+    );
+  }
+
+  void set(T value) {
+    state = value;
+    _box.put(_key, value);
+  }
+}
+
+/// Theme mode notifier for managing app theme
+class ThemeModeNotifier extends Notifier<ThemeMode> {
+  late final Box _box;
+
+  @override
+  ThemeMode build() {
+    final boxAsync = ref.watch(settingsBoxProvider);
+    return boxAsync.when(
+      data: (box) {
+        _box = box;
+        return _loadInitialTheme(box);
+      },
+      loading: () {
+        _box = Hive.box(SettingsKeys.boxName);
+        return _loadInitialTheme(_box);
+      },
+      error: (_, _) {
+        _box = Hive.box(SettingsKeys.boxName);
+        return _loadInitialTheme(_box);
+      },
+    );
+  }
 
   static ThemeMode _loadInitialTheme(Box box) {
     final saved = box.get(SettingsKeys.themeMode, defaultValue: 'dark');
@@ -94,40 +143,41 @@ final settingsBoxProvider = FutureProvider<Box>((ref) async {
 });
 
 /// Theme mode provider
-final themeModeProvider = StateNotifierProvider<ThemeModeNotifier, ThemeMode>((ref) {
-  final boxAsync = ref.watch(settingsBoxProvider);
-  return boxAsync.when(
-    data: (box) => ThemeModeNotifier(box),
-    loading: () => ThemeModeNotifier(Hive.box(SettingsKeys.boxName)),
-    error: (_, __) => ThemeModeNotifier(Hive.box(SettingsKeys.boxName)),
-  );
-});
+final themeModeProvider =
+    NotifierProvider<ThemeModeNotifier, ThemeMode>(ThemeModeNotifier.new);
 
 /// Gapless playback provider
-final gaplessPlaybackProvider = StateProvider<bool>((ref) {
-  final boxAsync = ref.watch(settingsBoxProvider);
-  return boxAsync.when(
-    data: (box) => box.get(SettingsKeys.gaplessPlayback, defaultValue: true),
-    loading: () => true,
-    error: (_, __) => true,
-  );
-});
+final gaplessPlaybackProvider = NotifierProvider<SettingsValueNotifier<bool>, bool>(
+  () => SettingsValueNotifier<bool>(SettingsKeys.gaplessPlayback, true),
+);
 
 /// Playback speed provider
-final playbackSpeedProvider = StateProvider<double>((ref) {
-  final boxAsync = ref.watch(settingsBoxProvider);
-  return boxAsync.when(
-    data: (box) => box.get(SettingsKeys.playbackSpeed, defaultValue: 1.0),
-    loading: () => 1.0,
-    error: (_, __) => 1.0,
-  );
-});
+final playbackSpeedProvider = NotifierProvider<SettingsValueNotifier<double>, double>(
+  () => SettingsValueNotifier<double>(SettingsKeys.playbackSpeed, 1.0),
+);
 
 /// Music folders notifier for managing scan directories
-class MusicFoldersNotifier extends StateNotifier<List<String>> {
-  final Box _box;
+class MusicFoldersNotifier extends Notifier<List<String>> {
+  late final Box _box;
 
-  MusicFoldersNotifier(this._box) : super(_loadInitialFolders(_box));
+  @override
+  List<String> build() {
+    final boxAsync = ref.watch(settingsBoxProvider);
+    return boxAsync.when(
+      data: (box) {
+        _box = box;
+        return _loadInitialFolders(box);
+      },
+      loading: () {
+        _box = Hive.box(SettingsKeys.boxName);
+        return _loadInitialFolders(_box);
+      },
+      error: (_, _) {
+        _box = Hive.box(SettingsKeys.boxName);
+        return _loadInitialFolders(_box);
+      },
+    );
+  }
 
   static List<String> _loadInitialFolders(Box box) {
     final saved = box.get(SettingsKeys.musicFolders);
@@ -157,181 +207,93 @@ class MusicFoldersNotifier extends StateNotifier<List<String>> {
 
 /// Music folders provider
 final musicFoldersProvider =
-    StateNotifierProvider<MusicFoldersNotifier, List<String>>((ref) {
-  final boxAsync = ref.watch(settingsBoxProvider);
-  return boxAsync.when(
-    data: (box) => MusicFoldersNotifier(box),
-    loading: () => MusicFoldersNotifier(Hive.box(SettingsKeys.boxName)),
-    error: (_, __) => MusicFoldersNotifier(Hive.box(SettingsKeys.boxName)),
-  );
-});
+    NotifierProvider<MusicFoldersNotifier, List<String>>(MusicFoldersNotifier.new);
 
 /// Auto-scan on startup provider
-final autoScanOnStartupProvider = StateProvider<bool>((ref) {
-  final boxAsync = ref.watch(settingsBoxProvider);
-  return boxAsync.when(
-    data: (box) => box.get(SettingsKeys.autoScanOnStartup, defaultValue: false),
-    loading: () => false,
-    error: (_, __) => false,
-  );
-});
+final autoScanOnStartupProvider = NotifierProvider<SettingsValueNotifier<bool>, bool>(
+  () => SettingsValueNotifier<bool>(SettingsKeys.autoScanOnStartup, false),
+);
 
 /// Skip silence provider
-final skipSilenceProvider = StateProvider<bool>((ref) {
-  final boxAsync = ref.watch(settingsBoxProvider);
-  return boxAsync.when(
-    data: (box) => box.get(SettingsKeys.skipSilence, defaultValue: false),
-    loading: () => false,
-    error: (_, __) => false,
-  );
-});
+final skipSilenceProvider = NotifierProvider<SettingsValueNotifier<bool>, bool>(
+  () => SettingsValueNotifier<bool>(SettingsKeys.skipSilence, false),
+);
 
 /// Remember last playback position provider
-final rememberLastPositionProvider = StateProvider<bool>((ref) {
-  final boxAsync = ref.watch(settingsBoxProvider);
-  return boxAsync.when(
-    data: (box) => box.get(SettingsKeys.rememberLastPosition, defaultValue: true),
-    loading: () => true,
-    error: (_, __) => true,
-  );
-});
+final rememberLastPositionProvider =
+    NotifierProvider<SettingsValueNotifier<bool>, bool>(
+  () => SettingsValueNotifier<bool>(SettingsKeys.rememberLastPosition, true),
+);
 
 /// Show album art on lockscreen provider
-final showAlbumArtOnLockscreenProvider = StateProvider<bool>((ref) {
-  final boxAsync = ref.watch(settingsBoxProvider);
-  return boxAsync.when(
-    data: (box) => box.get(SettingsKeys.showAlbumArtOnLockscreen, defaultValue: true),
-    loading: () => true,
-    error: (_, __) => true,
-  );
-});
+final showAlbumArtOnLockscreenProvider =
+    NotifierProvider<SettingsValueNotifier<bool>, bool>(
+  () => SettingsValueNotifier<bool>(SettingsKeys.showAlbumArtOnLockscreen, true),
+);
 
 /// Crossfade duration provider (in seconds, 0 = disabled)
-final crossfadeDurationProvider = StateProvider<int>((ref) {
-  final boxAsync = ref.watch(settingsBoxProvider);
-  return boxAsync.when(
-    data: (box) => box.get(SettingsKeys.crossfadeDuration, defaultValue: 0),
-    loading: () => 0,
-    error: (_, __) => 0,
-  );
-});
+final crossfadeDurationProvider =
+    NotifierProvider<SettingsValueNotifier<int>, int>(
+  () => SettingsValueNotifier<int>(SettingsKeys.crossfadeDuration, 0),
+);
 
 /// Minimum file duration to include (in seconds)
-final minFileDurationProvider = StateProvider<int>((ref) {
-  final boxAsync = ref.watch(settingsBoxProvider);
-  return boxAsync.when(
-    data: (box) => box.get(SettingsKeys.minFileDuration, defaultValue: 30),
-    loading: () => 30,
-    error: (_, __) => 30,
-  );
-});
+final minFileDurationProvider = NotifierProvider<SettingsValueNotifier<int>, int>(
+  () => SettingsValueNotifier<int>(SettingsKeys.minFileDuration, 30),
+);
 
 /// Fade on pause/play provider
-final fadeOnPausePlayProvider = StateProvider<bool>((ref) {
-  final boxAsync = ref.watch(settingsBoxProvider);
-  return boxAsync.when(
-    data: (box) => box.get(SettingsKeys.fadeOnPausePlay, defaultValue: true),
-    loading: () => true,
-    error: (_, __) => true,
-  );
-});
+final fadeOnPausePlayProvider = NotifierProvider<SettingsValueNotifier<bool>, bool>(
+  () => SettingsValueNotifier<bool>(SettingsKeys.fadeOnPausePlay, true),
+);
 
 /// Audio ducking provider (lower volume for notifications)
-final audioDuckingProvider = StateProvider<bool>((ref) {
-  final boxAsync = ref.watch(settingsBoxProvider);
-  return boxAsync.when(
-    data: (box) => box.get(SettingsKeys.audioDucking, defaultValue: true),
-    loading: () => true,
-    error: (_, __) => true,
-  );
-});
+final audioDuckingProvider = NotifierProvider<SettingsValueNotifier<bool>, bool>(
+  () => SettingsValueNotifier<bool>(SettingsKeys.audioDucking, true),
+);
 
 /// ReplayGain mode provider (off, track, album)
-final replayGainProvider = StateProvider<String>((ref) {
-  final boxAsync = ref.watch(settingsBoxProvider);
-  return boxAsync.when(
-    data: (box) => box.get(SettingsKeys.replayGain, defaultValue: 'off'),
-    loading: () => 'off',
-    error: (_, __) => 'off',
-  );
-});
+final replayGainProvider = NotifierProvider<SettingsValueNotifier<String>, String>(
+  () => SettingsValueNotifier<String>(SettingsKeys.replayGain, 'off'),
+);
 
 /// Auto-play on headset/bluetooth connect
-final autoPlayOnConnectProvider = StateProvider<bool>((ref) {
-  final boxAsync = ref.watch(settingsBoxProvider);
-  return boxAsync.when(
-    data: (box) => box.get(SettingsKeys.autoPlayOnConnect, defaultValue: false),
-    loading: () => false,
-    error: (_, __) => false,
-  );
-});
+final autoPlayOnConnectProvider = NotifierProvider<SettingsValueNotifier<bool>, bool>(
+  () => SettingsValueNotifier<bool>(SettingsKeys.autoPlayOnConnect, false),
+);
 
 /// Pause on headset/bluetooth disconnect
-final pauseOnDisconnectProvider = StateProvider<bool>((ref) {
-  final boxAsync = ref.watch(settingsBoxProvider);
-  return boxAsync.when(
-    data: (box) => box.get(SettingsKeys.pauseOnDisconnect, defaultValue: true),
-    loading: () => true,
-    error: (_, __) => true,
-  );
-});
+final pauseOnDisconnectProvider = NotifierProvider<SettingsValueNotifier<bool>, bool>(
+  () => SettingsValueNotifier<bool>(SettingsKeys.pauseOnDisconnect, true),
+);
 
 /// Keep shuffle queue on restart
-final keepShuffleQueueProvider = StateProvider<bool>((ref) {
-  final boxAsync = ref.watch(settingsBoxProvider);
-  return boxAsync.when(
-    data: (box) => box.get(SettingsKeys.keepShuffleQueue, defaultValue: false),
-    loading: () => false,
-    error: (_, __) => false,
-  );
-});
+final keepShuffleQueueProvider = NotifierProvider<SettingsValueNotifier<bool>, bool>(
+  () => SettingsValueNotifier<bool>(SettingsKeys.keepShuffleQueue, false),
+);
 
 /// Resume playback on app restart
-final resumeOnRestartProvider = StateProvider<bool>((ref) {
-  final boxAsync = ref.watch(settingsBoxProvider);
-  return boxAsync.when(
-    data: (box) => box.get(SettingsKeys.resumeOnRestart, defaultValue: false),
-    loading: () => false,
-    error: (_, __) => false,
-  );
-});
+final resumeOnRestartProvider = NotifierProvider<SettingsValueNotifier<bool>, bool>(
+  () => SettingsValueNotifier<bool>(SettingsKeys.resumeOnRestart, false),
+);
 
 /// Grid column count (2, 3, 4)
-final gridColumnCountProvider = StateProvider<int>((ref) {
-  final boxAsync = ref.watch(settingsBoxProvider);
-  return boxAsync.when(
-    data: (box) => box.get(SettingsKeys.gridColumnCount, defaultValue: 2),
-    loading: () => 2,
-    error: (_, __) => 2,
-  );
-});
+final gridColumnCountProvider = NotifierProvider<SettingsValueNotifier<int>, int>(
+  () => SettingsValueNotifier<int>(SettingsKeys.gridColumnCount, 2),
+);
 
 /// Show track numbers in lists
-final showTrackNumbersProvider = StateProvider<bool>((ref) {
-  final boxAsync = ref.watch(settingsBoxProvider);
-  return boxAsync.when(
-    data: (box) => box.get(SettingsKeys.showTrackNumbers, defaultValue: true),
-    loading: () => true,
-    error: (_, __) => true,
-  );
-});
+final showTrackNumbersProvider = NotifierProvider<SettingsValueNotifier<bool>, bool>(
+  () => SettingsValueNotifier<bool>(SettingsKeys.showTrackNumbers, true),
+);
 
 /// Confirm before exiting app
-final confirmExitProvider = StateProvider<bool>((ref) {
-  final boxAsync = ref.watch(settingsBoxProvider);
-  return boxAsync.when(
-    data: (box) => box.get(SettingsKeys.confirmExit, defaultValue: false),
-    loading: () => false,
-    error: (_, __) => false,
-  );
-});
+final confirmExitProvider = NotifierProvider<SettingsValueNotifier<bool>, bool>(
+  () => SettingsValueNotifier<bool>(SettingsKeys.confirmExit, false),
+);
 
 /// Sleep timer finish current track before stopping
-final sleepTimerFinishTrackProvider = StateProvider<bool>((ref) {
-  final boxAsync = ref.watch(settingsBoxProvider);
-  return boxAsync.when(
-    data: (box) => box.get(SettingsKeys.sleepTimerFinishTrack, defaultValue: true),
-    loading: () => true,
-    error: (_, __) => true,
-  );
-});
+final sleepTimerFinishTrackProvider =
+    NotifierProvider<SettingsValueNotifier<bool>, bool>(
+  () => SettingsValueNotifier<bool>(SettingsKeys.sleepTimerFinishTrack, true),
+);

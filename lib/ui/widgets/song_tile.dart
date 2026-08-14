@@ -27,8 +27,8 @@ class SongTile extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     // Check if this song is currently playing
     final playerState = ref.watch(playerStateProvider);
-    final isPlaying = playerState.valueOrNull?.isPlaying ?? false;
-    final currentSong = ref.watch(currentSongProvider).valueOrNull;
+    final isPlaying = playerState.value?.isPlaying ?? false;
+    final currentSong = ref.watch(currentSongProvider).value;
     final isSelected = currentSong?.id == song.id;
     final showTrackNumbers = ref.watch(showTrackNumbersProvider);
 
@@ -159,7 +159,7 @@ class SongTile extends ConsumerWidget {
         ? Image.file(
             File(artworkPath),
             fit: BoxFit.cover,
-            errorBuilder: (_, __, ___) => _buildPlaceholder(context),
+            errorBuilder: (_, _, _) => _buildPlaceholder(context),
           )
         : _buildPlaceholder(context);
   }

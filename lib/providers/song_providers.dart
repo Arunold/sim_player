@@ -5,16 +5,17 @@ import '../data/repositories/song_repository.dart';
 import 'service_providers.dart';
 
 /// Songs list provider
-final songsProvider = StateNotifierProvider<SongsNotifier, AsyncValue<List<Song>>>((ref) {
-  final repository = ref.watch(songRepositoryProvider);
-  return SongsNotifier(repository);
-});
+final songsProvider =
+    NotifierProvider<SongsNotifier, AsyncValue<List<Song>>>(SongsNotifier.new);
 
-class SongsNotifier extends StateNotifier<AsyncValue<List<Song>>> {
-  final SongRepository _repository;
+class SongsNotifier extends Notifier<AsyncValue<List<Song>>> {
+  late final SongRepository _repository;
 
-  SongsNotifier(this._repository) : super(const AsyncValue.loading()) {
-    loadSongs();
+  @override
+  AsyncValue<List<Song>> build() {
+    _repository = ref.watch(songRepositoryProvider);
+    Future<void>.microtask(() => loadSongs());
+    return const AsyncValue.loading();
   }
 
   Future<void> loadSongs() async {
@@ -28,8 +29,7 @@ class SongsNotifier extends StateNotifier<AsyncValue<List<Song>>> {
   }
 
   void refresh() {
-    final songs = _repository.getAllSongs();
-    state = AsyncValue.data(songs);
+    Future<void>.microtask(() => loadSongs());
   }
 
   Future<void> toggleFavorite(String songId) async {
@@ -39,7 +39,18 @@ class SongsNotifier extends StateNotifier<AsyncValue<List<Song>>> {
 }
 
 /// Search query provider
-final searchQueryProvider = StateProvider<String>((ref) => '');
+final searchQueryProvider = NotifierProvider<SearchQueryNotifier, String>(
+  SearchQueryNotifier.new,
+);
+
+class SearchQueryNotifier extends Notifier<String> {
+  @override
+  String build() => '';
+
+  void set(String value) {
+    state = value;
+  }
+}
 
 /// Filtered songs provider (for search)
 final filteredSongsProvider = Provider<List<Song>>((ref) {
@@ -57,7 +68,7 @@ final filteredSongsProvider = Provider<List<Song>>((ref) {
       }).toList();
     },
     loading: () => [],
-    error: (_, __) => [],
+    error: (_, _) => [],
   );
 });
 
@@ -71,7 +82,7 @@ final artistsProvider = Provider<List<String>>((ref) {
       return artists;
     },
     loading: () => [],
-    error: (_, __) => [],
+    error: (_, _) => [],
   );
 });
 
@@ -85,7 +96,7 @@ final albumsProvider = Provider<List<String>>((ref) {
       return albums;
     },
     loading: () => [],
-    error: (_, __) => [],
+    error: (_, _) => [],
   );
 });
 
@@ -95,7 +106,7 @@ final songsByArtistProvider = Provider.family<List<Song>, String>((ref, artist) 
   return songsAsync.when(
     data: (songs) => songs.where((s) => s.artist == artist).toList(),
     loading: () => [],
-    error: (_, __) => [],
+    error: (_, _) => [],
   );
 });
 
@@ -105,7 +116,7 @@ final songsByAlbumProvider = Provider.family<List<Song>, String>((ref, album) {
   return songsAsync.when(
     data: (songs) => songs.where((s) => s.album == album).toList(),
     loading: () => [],
-    error: (_, __) => [],
+    error: (_, _) => [],
   );
 });
 
@@ -115,7 +126,7 @@ final favoriteSongsProvider = Provider<List<Song>>((ref) {
   return songsAsync.when(
     data: (songs) => songs.where((s) => s.isFavorite).toList(),
     loading: () => [],
-    error: (_, __) => [],
+    error: (_, _) => [],
   );
 });
 
@@ -129,7 +140,7 @@ final recentlyAddedProvider = Provider<List<Song>>((ref) {
       return sorted.take(50).toList();
     },
     loading: () => [],
-    error: (_, __) => [],
+    error: (_, _) => [],
   );
 });
 
@@ -143,7 +154,7 @@ final recentlyPlayedProvider = Provider<List<Song>>((ref) {
       return played.take(50).toList();
     },
     loading: () => [],
-    error: (_, __) => [],
+    error: (_, _) => [],
   );
 });
 
@@ -161,7 +172,7 @@ final yearsProvider = Provider<List<int>>((ref) {
       return years;
     },
     loading: () => [],
-    error: (_, __) => [],
+    error: (_, _) => [],
   );
 });
 
@@ -171,7 +182,7 @@ final songsByYearProvider = Provider.family<List<Song>, int>((ref, year) {
   return songsAsync.when(
     data: (songs) => songs.where((s) => s.year == year).toList(),
     loading: () => [],
-    error: (_, __) => [],
+    error: (_, _) => [],
   );
 });
 
@@ -189,7 +200,7 @@ final genresProvider = Provider<List<String>>((ref) {
       return genres;
     },
     loading: () => [],
-    error: (_, __) => [],
+    error: (_, _) => [],
   );
 });
 
@@ -199,7 +210,7 @@ final songsByGenreProvider = Provider.family<List<Song>, String>((ref, genre) {
   return songsAsync.when(
     data: (songs) => songs.where((s) => s.genre == genre).toList(),
     loading: () => [],
-    error: (_, __) => [],
+    error: (_, _) => [],
   );
 });
 
@@ -213,6 +224,6 @@ final mostPlayedProvider = Provider<List<Song>>((ref) {
       return sorted.take(20).toList();
     },
     loading: () => [],
-    error: (_, __) => [],
+    error: (_, _) => [],
   );
 });

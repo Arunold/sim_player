@@ -66,14 +66,13 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                                 icon: const Icon(Icons.clear_rounded),
                                 onPressed: () {
                                   _searchController.clear();
-                                  ref.read(searchQueryProvider.notifier).state =
-                                      '';
+                                  ref.read(searchQueryProvider.notifier).set('');
                                 },
                               )
                             : null,
                       ),
                       onChanged: (value) {
-                        ref.read(searchQueryProvider.notifier).state = value;
+                        ref.read(searchQueryProvider.notifier).set(value);
                       },
                     ),
                   ),

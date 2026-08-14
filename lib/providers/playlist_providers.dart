@@ -5,16 +5,18 @@ import 'service_providers.dart';
 
 /// Playlists provider
 final playlistsProvider =
-    StateNotifierProvider<PlaylistsNotifier, AsyncValue<List<Playlist>>>((ref) {
-  final repository = ref.watch(playlistRepositoryProvider);
-  return PlaylistsNotifier(repository);
-});
+    NotifierProvider<PlaylistsNotifier, AsyncValue<List<Playlist>>>(
+  PlaylistsNotifier.new,
+);
 
-class PlaylistsNotifier extends StateNotifier<AsyncValue<List<Playlist>>> {
-  final PlaylistRepository _repository;
+class PlaylistsNotifier extends Notifier<AsyncValue<List<Playlist>>> {
+  late final PlaylistRepository _repository;
 
-  PlaylistsNotifier(this._repository) : super(const AsyncValue.loading()) {
-    loadPlaylists();
+  @override
+  AsyncValue<List<Playlist>> build() {
+    _repository = ref.watch(playlistRepositoryProvider);
+    Future<void>.microtask(() => loadPlaylists());
+    return const AsyncValue.loading();
   }
 
   Future<void> loadPlaylists() async {
@@ -28,8 +30,7 @@ class PlaylistsNotifier extends StateNotifier<AsyncValue<List<Playlist>>> {
   }
 
   void refresh() {
-    final playlists = _repository.getAllPlaylists();
-    state = AsyncValue.data(playlists);
+    Future<void>.microtask(() => loadPlaylists());
   }
 
   Future<Playlist> createPlaylist({
@@ -90,6 +91,6 @@ final playlistProvider =
       }
     },
     loading: () => null,
-    error: (_, __) => null,
+    error: (_, _) => null,
   );
 });

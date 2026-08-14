@@ -51,25 +51,25 @@ class SettingsScreen extends ConsumerWidget {
             icon: isScanning.when(
               data: (scanning) => scanning ? Icons.stop_rounded : Icons.refresh_rounded,
               loading: () => Icons.refresh_rounded,
-              error: (_, __) => Icons.refresh_rounded,
+              error: (_, _) => Icons.refresh_rounded,
             ),
             title: isScanning.when(
               data: (scanning) => scanning ? 'Cancel Scan' : 'Rescan Library',
               loading: () => 'Rescan Library',
-              error: (_, __) => 'Rescan Library',
+              error: (_, _) => 'Rescan Library',
             ),
             subtitle: isScanning.when(
               data: (scanning) =>
                   scanning ? 'Tap to cancel scanning' : 'Scan for new music files',
               loading: () => 'Scan for new music files',
-              error: (_, __) => 'Scan for new music files',
+              error: (_, _) => 'Scan for new music files',
             ),
             onTap: isScanning.when(
               data: (scanning) => scanning
                   ? () => _cancelScan(context, ref)
                   : () => _rescanLibrary(context, ref),
               loading: () => () => _rescanLibrary(context, ref),
-              error: (_, __) => () => _rescanLibrary(context, ref),
+              error: (_, _) => () => _rescanLibrary(context, ref),
             ),
             trailing: isScanning.when(
               data: (scanning) => scanning
@@ -80,7 +80,7 @@ class SettingsScreen extends ConsumerWidget {
                     )
                   : const Icon(Icons.chevron_right_rounded),
               loading: () => const Icon(Icons.chevron_right_rounded),
-              error: (_, __) => const Icon(Icons.chevron_right_rounded),
+              error: (_, _) => const Icon(Icons.chevron_right_rounded),
             ),
           ),
           _buildSettingsTile(
@@ -602,7 +602,7 @@ class SettingsScreen extends ConsumerWidget {
 
   void _setPlaybackSpeed(WidgetRef ref, double speed) async {
     // Update provider state
-    ref.read(playbackSpeedProvider.notifier).state = speed;
+    ref.read(playbackSpeedProvider.notifier).set(speed);
 
     // Persist to Hive
     final boxAsync = ref.read(settingsBoxProvider);
@@ -617,7 +617,7 @@ class SettingsScreen extends ConsumerWidget {
 
   void _setGaplessPlayback(WidgetRef ref, bool enabled) async {
     // Update provider state
-    ref.read(gaplessPlaybackProvider.notifier).state = enabled;
+    ref.read(gaplessPlaybackProvider.notifier).set(enabled);
 
     // Persist to Hive
     final boxAsync = ref.read(settingsBoxProvider);
@@ -627,7 +627,7 @@ class SettingsScreen extends ConsumerWidget {
   }
 
   void _setAutoScanOnStartup(WidgetRef ref, bool enabled) {
-    ref.read(autoScanOnStartupProvider.notifier).state = enabled;
+    ref.read(autoScanOnStartupProvider.notifier).set(enabled);
     final boxAsync = ref.read(settingsBoxProvider);
     boxAsync.whenData((box) {
       box.put(SettingsKeys.autoScanOnStartup, enabled);
@@ -635,7 +635,7 @@ class SettingsScreen extends ConsumerWidget {
   }
 
   void _setSkipSilence(WidgetRef ref, bool enabled) {
-    ref.read(skipSilenceProvider.notifier).state = enabled;
+    ref.read(skipSilenceProvider.notifier).set(enabled);
     final boxAsync = ref.read(settingsBoxProvider);
     boxAsync.whenData((box) {
       box.put(SettingsKeys.skipSilence, enabled);
@@ -646,7 +646,7 @@ class SettingsScreen extends ConsumerWidget {
   }
 
   void _setRememberLastPosition(WidgetRef ref, bool enabled) {
-    ref.read(rememberLastPositionProvider.notifier).state = enabled;
+    ref.read(rememberLastPositionProvider.notifier).set(enabled);
     final boxAsync = ref.read(settingsBoxProvider);
     boxAsync.whenData((box) {
       box.put(SettingsKeys.rememberLastPosition, enabled);
@@ -654,7 +654,7 @@ class SettingsScreen extends ConsumerWidget {
   }
 
   void _setShowAlbumArtOnLockscreen(WidgetRef ref, bool enabled) {
-    ref.read(showAlbumArtOnLockscreenProvider.notifier).state = enabled;
+    ref.read(showAlbumArtOnLockscreenProvider.notifier).set(enabled);
     final boxAsync = ref.read(settingsBoxProvider);
     boxAsync.whenData((box) {
       box.put(SettingsKeys.showAlbumArtOnLockscreen, enabled);
@@ -690,7 +690,7 @@ class SettingsScreen extends ConsumerWidget {
   }
 
   void _setCrossfadeDuration(WidgetRef ref, int duration) {
-    ref.read(crossfadeDurationProvider.notifier).state = duration;
+    ref.read(crossfadeDurationProvider.notifier).set(duration);
     final boxAsync = ref.read(settingsBoxProvider);
     boxAsync.whenData((box) {
       box.put(SettingsKeys.crossfadeDuration, duration);
@@ -730,7 +730,7 @@ class SettingsScreen extends ConsumerWidget {
   }
 
   void _setMinFileDuration(WidgetRef ref, int duration) {
-    ref.read(minFileDurationProvider.notifier).state = duration;
+    ref.read(minFileDurationProvider.notifier).set(duration);
     final boxAsync = ref.read(settingsBoxProvider);
     boxAsync.whenData((box) {
       box.put(SettingsKeys.minFileDuration, duration);
@@ -738,7 +738,7 @@ class SettingsScreen extends ConsumerWidget {
   }
 
   void _setFadeOnPausePlay(WidgetRef ref, bool enabled) {
-    ref.read(fadeOnPausePlayProvider.notifier).state = enabled;
+    ref.read(fadeOnPausePlayProvider.notifier).set(enabled);
     final boxAsync = ref.read(settingsBoxProvider);
     boxAsync.whenData((box) {
       box.put(SettingsKeys.fadeOnPausePlay, enabled);
@@ -749,7 +749,7 @@ class SettingsScreen extends ConsumerWidget {
   }
 
   void _setAudioDucking(WidgetRef ref, bool enabled) {
-    ref.read(audioDuckingProvider.notifier).state = enabled;
+    ref.read(audioDuckingProvider.notifier).set(enabled);
     final boxAsync = ref.read(settingsBoxProvider);
     boxAsync.whenData((box) {
       box.put(SettingsKeys.audioDucking, enabled);
@@ -809,7 +809,7 @@ class SettingsScreen extends ConsumerWidget {
   }
 
   void _setReplayGain(WidgetRef ref, String mode) {
-    ref.read(replayGainProvider.notifier).state = mode;
+    ref.read(replayGainProvider.notifier).set(mode);
     final boxAsync = ref.read(settingsBoxProvider);
     boxAsync.whenData((box) {
       box.put(SettingsKeys.replayGain, mode);
@@ -817,7 +817,7 @@ class SettingsScreen extends ConsumerWidget {
   }
 
   void _setAutoPlayOnConnect(WidgetRef ref, bool enabled) {
-    ref.read(autoPlayOnConnectProvider.notifier).state = enabled;
+    ref.read(autoPlayOnConnectProvider.notifier).set(enabled);
     final boxAsync = ref.read(settingsBoxProvider);
     boxAsync.whenData((box) {
       box.put(SettingsKeys.autoPlayOnConnect, enabled);
@@ -825,7 +825,7 @@ class SettingsScreen extends ConsumerWidget {
   }
 
   void _setPauseOnDisconnect(WidgetRef ref, bool enabled) {
-    ref.read(pauseOnDisconnectProvider.notifier).state = enabled;
+    ref.read(pauseOnDisconnectProvider.notifier).set(enabled);
     final boxAsync = ref.read(settingsBoxProvider);
     boxAsync.whenData((box) {
       box.put(SettingsKeys.pauseOnDisconnect, enabled);
@@ -833,7 +833,7 @@ class SettingsScreen extends ConsumerWidget {
   }
 
   void _setKeepShuffleQueue(WidgetRef ref, bool enabled) {
-    ref.read(keepShuffleQueueProvider.notifier).state = enabled;
+    ref.read(keepShuffleQueueProvider.notifier).set(enabled);
     final boxAsync = ref.read(settingsBoxProvider);
     boxAsync.whenData((box) {
       box.put(SettingsKeys.keepShuffleQueue, enabled);
@@ -841,7 +841,7 @@ class SettingsScreen extends ConsumerWidget {
   }
 
   void _setResumeOnRestart(WidgetRef ref, bool enabled) {
-    ref.read(resumeOnRestartProvider.notifier).state = enabled;
+    ref.read(resumeOnRestartProvider.notifier).set(enabled);
     final boxAsync = ref.read(settingsBoxProvider);
     boxAsync.whenData((box) {
       box.put(SettingsKeys.resumeOnRestart, enabled);
@@ -849,7 +849,7 @@ class SettingsScreen extends ConsumerWidget {
   }
 
   void _setSleepTimerFinishTrack(WidgetRef ref, bool enabled) {
-    ref.read(sleepTimerFinishTrackProvider.notifier).state = enabled;
+    ref.read(sleepTimerFinishTrackProvider.notifier).set(enabled);
     final boxAsync = ref.read(settingsBoxProvider);
     boxAsync.whenData((box) {
       box.put(SettingsKeys.sleepTimerFinishTrack, enabled);
@@ -885,7 +885,7 @@ class SettingsScreen extends ConsumerWidget {
   }
 
   void _setGridColumnCount(WidgetRef ref, int count) {
-    ref.read(gridColumnCountProvider.notifier).state = count;
+    ref.read(gridColumnCountProvider.notifier).set(count);
     final boxAsync = ref.read(settingsBoxProvider);
     boxAsync.whenData((box) {
       box.put(SettingsKeys.gridColumnCount, count);
@@ -893,7 +893,7 @@ class SettingsScreen extends ConsumerWidget {
   }
 
   void _setShowTrackNumbers(WidgetRef ref, bool enabled) {
-    ref.read(showTrackNumbersProvider.notifier).state = enabled;
+    ref.read(showTrackNumbersProvider.notifier).set(enabled);
     final boxAsync = ref.read(settingsBoxProvider);
     boxAsync.whenData((box) {
       box.put(SettingsKeys.showTrackNumbers, enabled);
@@ -901,7 +901,7 @@ class SettingsScreen extends ConsumerWidget {
   }
 
   void _setConfirmExit(WidgetRef ref, bool enabled) {
-    ref.read(confirmExitProvider.notifier).state = enabled;
+    ref.read(confirmExitProvider.notifier).set(enabled);
     final boxAsync = ref.read(settingsBoxProvider);
     boxAsync.whenData((box) {
       box.put(SettingsKeys.confirmExit, enabled);
@@ -1123,7 +1123,7 @@ class _MusicFoldersSheet extends ConsumerWidget {
 
   Future<void> _addFolder(BuildContext context, WidgetRef ref) async {
     try {
-      final result = await FilePicker.platform.getDirectoryPath(
+      final result = await FilePicker.getDirectoryPath(
         dialogTitle: 'Select Music Folder',
       );
 

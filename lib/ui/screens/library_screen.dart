@@ -9,8 +9,18 @@ import '../widgets/widgets.dart';
 import 'browse_screen.dart';
 import 'songs_list_screen.dart';
 
+class LibraryViewModeNotifier extends Notifier<bool> {
+  @override
+  bool build() => true;
+
+  void toggle() {
+    state = !state;
+  }
+}
+
 /// Provider to track if library is in grid or list view mode
-final libraryViewModeProvider = StateProvider<bool>((ref) => true);
+final libraryViewModeProvider =
+    NotifierProvider<LibraryViewModeNotifier, bool>(LibraryViewModeNotifier.new);
 
 /// Library screen with category-based navigation
 class LibraryScreen extends ConsumerWidget {
@@ -29,16 +39,16 @@ class LibraryScreen extends ConsumerWidget {
     final recentlyPlayed = ref.watch(recentlyPlayedProvider);
     final isGridView = ref.watch(libraryViewModeProvider);
 
-    final totalSongs = songsAsync.when(
+    final int totalSongs = songsAsync.when(
       data: (songs) => songs.length,
       loading: () => 0,
-      error: (_, __) => 0,
+      error: (_, _) => 0,
     );
 
-    final playlistCount = playlistsAsync.when(
+    final int playlistCount = playlistsAsync.when(
       data: (playlists) => playlists.length,
       loading: () => 0,
-      error: (_, __) => 0,
+      error: (_, _) => 0,
     );
 
     // Build counts map for subtitles
@@ -102,8 +112,7 @@ class LibraryScreen extends ConsumerWidget {
                 // Grid/List toggle button
                 IconButton(
                   onPressed: () {
-                    ref.read(libraryViewModeProvider.notifier).state =
-                        !isGridView;
+                    ref.read(libraryViewModeProvider.notifier).toggle();
                   },
                   icon: Icon(
                     isGridView
@@ -320,7 +329,7 @@ class LibraryScreen extends ConsumerWidget {
                   .when(
                     data: (songs) => songs,
                     loading: () => <Song>[],
-                    error: (_, __) => <Song>[],
+                    error: (_, _) => <Song>[],
                   ),
             ),
           ),

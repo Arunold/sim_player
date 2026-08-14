@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/constants/theme_constants.dart';
+import '../../data/models/playlist.dart';
 import '../../data/models/song.dart';
 import '../../providers/providers.dart';
 
@@ -283,7 +284,11 @@ class SongOptionsMenu extends ConsumerWidget {
   }
 
   void _showAddToPlaylistDialog(BuildContext context, WidgetRef ref) {
-    final playlists = ref.read(playlistsProvider).valueOrNull ?? [];
+    final playlists = ref.read(playlistsProvider).when(
+      data: (value) => value,
+      loading: () => <Playlist>[],
+      error: (_, _) => <Playlist>[],
+    );
 
     showDialog(
       context: context,

@@ -70,11 +70,11 @@ class MiniPlayer extends ConsumerWidget {
             );
           },
           loading: () => const SizedBox.shrink(),
-          error: (_, __) => const SizedBox.shrink(),
+          error: (_, _) => const SizedBox.shrink(),
         );
       },
       loading: () => const SizedBox.shrink(),
-      error: (_, __) => const SizedBox.shrink(),
+      error: (_, _) => const SizedBox.shrink(),
     );
   }
 
@@ -129,7 +129,7 @@ class MiniPlayer extends ConsumerWidget {
                           ? Image.file(
                               File(song.artworkPath!),
                               fit: BoxFit.cover,
-                              errorBuilder: (_, __, ___) =>
+                              errorBuilder: (_, _, _) =>
                                   _buildPlaceholder(context, compact),
                             )
                           : _buildPlaceholder(context, compact),

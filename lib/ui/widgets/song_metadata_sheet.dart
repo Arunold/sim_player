@@ -85,7 +85,7 @@ class _SongMetadataSheetState extends State<SongMetadataSheet> {
                 child: Image.file(
                   File(widget.song.artworkPath!),
                   fit: BoxFit.cover,
-                  errorBuilder: (_, __, ___) =>
+                  errorBuilder: (_, _, _) =>
                       Container(color: context.colors.backgroundPrimary),
                 ),
               ),
@@ -243,7 +243,7 @@ class _SongMetadataSheetState extends State<SongMetadataSheet> {
                 ? Image.file(
                     File(widget.song.artworkPath!),
                     fit: BoxFit.cover,
-                    errorBuilder: (_, __, ___) => _buildArtPlaceholder(context),
+                    errorBuilder: (_, _, _) => _buildArtPlaceholder(context),
                   )
                 : _buildArtPlaceholder(context),
           ),

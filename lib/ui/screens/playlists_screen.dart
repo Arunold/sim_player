@@ -228,7 +228,7 @@ class PlaylistsScreen extends ConsumerWidget {
       data: (allSongs) =>
           allSongs.where((s) => playlist.songIds.contains(s.id)).toList(),
       loading: () => <dynamic>[],
-      error: (_, __) => <dynamic>[],
+      error: (_, _) => <dynamic>[],
     );
 
     showModalBottomSheet(
@@ -385,7 +385,7 @@ class PlaylistsScreen extends ConsumerWidget {
     final allSongs = songsAsync.when(
       data: (songs) => songs,
       loading: () => <dynamic>[],
-      error: (_, __) => <dynamic>[],
+      error: (_, _) => <dynamic>[],
     );
 
     showModalBottomSheet(

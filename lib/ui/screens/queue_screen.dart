@@ -78,7 +78,7 @@ class _QueueScreenState extends ConsumerState<QueueScreen> {
   Widget build(BuildContext context) {
     final queueAsync = ref.watch(playbackQueueProvider);
     final songsAsync = ref.watch(songsProvider);
-    final currentSong = ref.watch(currentSongProvider).valueOrNull;
+    final currentSong = ref.watch(currentSongProvider).value;
     final audioController = ref.read(audioControllerProvider);
 
     return Scaffold(
@@ -220,7 +220,7 @@ class _QueueScreenState extends ConsumerState<QueueScreen> {
         );
       },
       loading: () => const SizedBox.shrink(),
-      error: (_, __) => const SizedBox.shrink(),
+      error: (_, _) => const SizedBox.shrink(),
     );
   }
 
