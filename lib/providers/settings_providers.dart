@@ -33,12 +33,8 @@ class SettingsKeys {
   static const String sleepTimerFinishTrack = 'sleepTimerFinishTrack';
 }
 
-/// Default music folders to scan
-const List<String> defaultMusicFolders = [
-  '/storage/emulated/0/Music',
-  '/storage/emulated/0/Download',
-  '/storage/emulated/0/Downloads',
-];
+/// Default music folders to scan (empty defaults to platform specific dirs)
+const List<String> defaultMusicFolders = [];
 
 class SettingsValueNotifier<T> extends Notifier<T> {
   SettingsValueNotifier(this._key, this._defaultValue);

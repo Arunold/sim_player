@@ -17,7 +17,6 @@ dependencies:
   
   # Audio Playback
   just_audio: ^0.10.6
-  just_audio_background: ^0.0.1-beta.13
   audio_service: ^0.18.15
   audio_session: ^0.2.4
   
@@ -35,11 +34,8 @@ dependencies:
   audio_metadata_reader: ^1.4.2
   
   # UI Components
-  cached_network_image: ^3.4.1
   shimmer: ^3.0.0
   
-  # Routing
-  go_router: ^17.3.0
   
   # Utilities
   uuid: ^4.5.1

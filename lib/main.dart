@@ -54,6 +54,7 @@ class SimPlayerApp extends ConsumerStatefulWidget {
 class _SimPlayerAppState extends ConsumerState<SimPlayerApp> {
   bool _initialized = false;
   bool _showSplash = true;
+  String? _initError;
 
   @override
   void initState() {
@@ -62,22 +63,29 @@ class _SimPlayerAppState extends ConsumerState<SimPlayerApp> {
   }
 
   Future<void> _initializeApp() async {
-    // Initialize repositories
-    await ref.read(songRepositoryProvider).init();
-    await ref.read(playlistRepositoryProvider).init();
+    try {
+      // Initialize repositories
+      await ref.read(songRepositoryProvider).init();
+      await ref.read(playlistRepositoryProvider).init();
 
-    // Initialize audio service
-    await ref.read(audioServiceProvider).init();
-    
-    // Apply saved audio settings
-    _applyAudioSettings();
+      // Initialize audio service
+      await ref.read(audioServiceProvider).init();
 
-    setState(() {
-      _initialized = true;
-    });
+      // Apply saved audio settings (safe now that Hive boxes are open)
+      _applyAudioSettings();
 
-    // Auto-scan on startup if enabled
-    _checkAutoScan();
+      setState(() {
+        _initialized = true;
+      });
+
+      // Auto-scan on startup if enabled
+      _checkAutoScan();
+    } catch (e) {
+      setState(() {
+        _initError = e.toString();
+        _initialized = true; // Stop showing splash
+      });
+    }
   }
   
   void _applyAudioSettings() {
@@ -159,6 +167,52 @@ class _SimPlayerAppState extends ConsumerState<SimPlayerApp> {
         darkTheme: AppTheme.darkTheme,
         themeMode: themeMode,
         home: SplashScreen(onComplete: _onSplashComplete),
+      );
+    }
+
+    if (_initError != null) {
+      return MaterialApp(
+        title: 'SimPlayer',
+        debugShowCheckedModeBanner: false,
+        theme: AppTheme.lightTheme,
+        darkTheme: AppTheme.darkTheme,
+        themeMode: themeMode,
+        home: Scaffold(
+          body: Center(
+            child: Padding(
+              padding: const EdgeInsets.all(32),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(Icons.error_outline, size: 64, color: Colors.red),
+                  const SizedBox(height: 16),
+                  const Text(
+                    'Failed to initialize',
+                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    _initError!,
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(color: Colors.grey),
+                  ),
+                  const SizedBox(height: 24),
+                  ElevatedButton(
+                    onPressed: () {
+                      setState(() {
+                        _initError = null;
+                        _initialized = false;
+                        _showSplash = true;
+                      });
+                      _initializeApp();
+                    },
+                    child: const Text('Retry'),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
       );
     }
 

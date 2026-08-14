@@ -272,8 +272,7 @@ class _QueueScreenState extends ConsumerState<QueueScreen> {
                   child: child,
                 );
               },
-              onReorder: (oldIndex, newIndex) {
-                if (newIndex > oldIndex) newIndex--;
+              onReorderItem: (oldIndex, newIndex) {
                 audioController.reorderQueue(oldIndex, newIndex);
               },
               itemBuilder: (context, index) {
@@ -330,7 +329,6 @@ class _QueueScreenState extends ConsumerState<QueueScreen> {
   }
 
   void _showClearQueueDialog(BuildContext context) {
-    final audioController = ref.read(audioControllerProvider);
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -345,10 +343,13 @@ class _QueueScreenState extends ConsumerState<QueueScreen> {
           ),
           TextButton(
             onPressed: () async {
+              final audioController = ref.read(audioControllerProvider);
               Navigator.pop(context);
               await audioController.clearQueue();
-              if (mounted) {
-                Navigator.pop(context);
+              if (context.mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Queue cleared')),
+                );
               }
             },
             style: TextButton.styleFrom(foregroundColor: context.colors.error),

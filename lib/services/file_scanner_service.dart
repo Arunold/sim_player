@@ -1,6 +1,6 @@
 import 'dart:async';
 import 'dart:io';
-import 'dart:typed_data';
+import 'package:flutter/foundation.dart';
 import 'package:path/path.dart' as path;
 import 'package:path_provider/path_provider.dart';
 import 'package:uuid/uuid.dart';
@@ -57,8 +57,8 @@ class FileScannerService {
         await artworkFile.writeAsBytes(imageData);
         return artworkFile.path;
       }
-    } catch (_) {
-      // Artwork extraction failed
+    } catch (e) {
+      debugPrint('Failed to extract artwork for song $songId: $e');
     }
     return null;
   }
@@ -82,15 +82,23 @@ class FileScannerService {
     _isScanningController.add(true);
     _cancelRequested = false;
 
-    // Use provided folders or default ones
-    final musicDirs = folders ??
-        [
+    List<String> musicDirs = folders ?? [];
+    if (musicDirs.isEmpty) {
+      if (Platform.isAndroid) {
+        musicDirs = [
           '/storage/emulated/0/Music',
           '/storage/emulated/0/Download',
           '/storage/emulated/0/Downloads',
           '/sdcard/Music',
           '/sdcard/Download',
         ];
+      } else {
+        try {
+          final dir = await getApplicationDocumentsDirectory();
+          musicDirs = [dir.path];
+        } catch (_) {}
+      }
+    }
 
     int totalNew = 0;
     int totalUpdated = 0;
@@ -124,6 +132,7 @@ class FileScannerService {
       newSongs: totalNew,
       updatedSongs: totalUpdated,
       failedFiles: totalFailed,
+      skippedFiles: totalSkipped,
       duration: stopwatch.elapsed,
       cancelled: _cancelRequested,
     );
@@ -257,6 +266,7 @@ class FileScannerService {
             await Future.delayed(const Duration(milliseconds: 50));
           }
         } catch (e) {
+          debugPrint('Failed to process file ${file.path}: $e');
           failedFiles++;
         }
       }
@@ -266,7 +276,7 @@ class FileScannerService {
         await _songRepository.saveSongs(songsToSave);
       }
     } catch (e) {
-      // Handle directory errors
+      debugPrint('Error scanning directory $directoryPath: $e');
     }
 
     stopwatch.stop();
@@ -377,7 +387,8 @@ class FileScannerService {
                   DateTime.now()
             : DateTime.now(),
       );
-    } catch (_) {
+    } catch (e) {
+      debugPrint('Failed to extract metadata from ${file.path}: $e');
       return null;
     }
   }

@@ -329,30 +329,30 @@ class SongOptionsMenu extends ConsumerWidget {
     );
   }
 
-  void _showDeleteConfirmation(BuildContext context, WidgetRef ref) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: context.colors.card,
-        title: const Text('Delete song?'),
-        content: Text('Are you sure you want to delete "${song.title}"?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
-          ),
-          TextButton(
-            onPressed: () {
-              // TODO: Implement delete
-              Navigator.pop(context);
-            },
-            style: TextButton.styleFrom(foregroundColor: context.colors.error),
-            child: const Text('Delete'),
-          ),
-        ],
-      ),
-    );
-  }
+  // void _showDeleteConfirmation(BuildContext context, WidgetRef ref) {
+  //   showDialog(
+  //     context: context,
+  //     builder: (context) => AlertDialog(
+  //       backgroundColor: context.colors.card,
+  //       title: const Text('Delete song?'),
+  //       content: Text('Are you sure you want to delete "${song.title}"?'),
+  //       actions: [
+  //         TextButton(
+  //           onPressed: () => Navigator.pop(context),
+  //           child: const Text('Cancel'),
+  //         ),
+  //         TextButton(
+  //           onPressed: () {
+  //             // TODO: Implement delete
+  //             Navigator.pop(context);
+  //           },
+  //           style: TextButton.styleFrom(foregroundColor: context.colors.error),
+  //           child: const Text('Delete'),
+  //         ),
+  //       ],
+  //     ),
+  //   );
+  // }
 
   void _showSongInfoDialog(BuildContext context) {
     showDialog(

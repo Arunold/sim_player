@@ -6,8 +6,20 @@ import '../../core/constants/app_constants.dart';
 class SongRepository {
   late Box<Song> _songsBox;
 
+  /// In-memory index for O(1) path lookups (critical for scan performance)
+  final Map<String, Song> _pathIndex = {};
+
   Future<void> init() async {
     _songsBox = await Hive.openBox<Song>(AppConstants.songsBox);
+    _rebuildPathIndex();
+  }
+
+  /// Rebuild the path index from the Hive box
+  void _rebuildPathIndex() {
+    _pathIndex.clear();
+    for (final song in _songsBox.values) {
+      _pathIndex[song.filePath] = song;
+    }
   }
 
   /// Get all songs
@@ -32,26 +44,41 @@ class SongRepository {
   /// Add or update a song
   Future<void> saveSong(Song song) async {
     await _songsBox.put(song.id, song);
+    _pathIndex[song.filePath] = song;
   }
 
   /// Add multiple songs
   Future<void> saveSongs(List<Song> songs) async {
     final Map<String, Song> songMap = {for (var song in songs) song.id: song};
     await _songsBox.putAll(songMap);
+    for (final song in songs) {
+      _pathIndex[song.filePath] = song;
+    }
   }
 
   /// Delete a song
   Future<void> deleteSong(String id) async {
+    final song = _songsBox.get(id);
+    if (song != null) {
+      _pathIndex.remove(song.filePath);
+    }
     await _songsBox.delete(id);
   }
 
   /// Delete multiple songs
   Future<void> deleteSongs(List<String> ids) async {
+    for (final id in ids) {
+      final song = _songsBox.get(id);
+      if (song != null) {
+        _pathIndex.remove(song.filePath);
+      }
+    }
     await _songsBox.deleteAll(ids);
   }
 
   /// Clear all songs
   Future<void> clearAll() async {
+    _pathIndex.clear();
     await _songsBox.clear();
   }
 
@@ -126,6 +153,7 @@ class SongRepository {
     if (song != null) {
       final updatedSong = song.copyWith(isFavorite: !song.isFavorite);
       await _songsBox.put(songId, updatedSong);
+      _pathIndex[updatedSong.filePath] = updatedSong;
       return updatedSong;
     }
     throw Exception('Song not found');
@@ -140,20 +168,17 @@ class SongRepository {
         lastPlayed: DateTime.now(),
       );
       await _songsBox.put(songId, updatedSong);
+      _pathIndex[updatedSong.filePath] = updatedSong;
     }
   }
 
-  /// Check if song exists by file path
+  /// Check if song exists by file path (O(1) via path index)
   bool songExistsByPath(String filePath) {
-    return _songsBox.values.any((s) => s.filePath == filePath);
+    return _pathIndex.containsKey(filePath);
   }
 
-  /// Get song by file path
+  /// Get song by file path (O(1) via path index)
   Song? getSongByPath(String filePath) {
-    try {
-      return _songsBox.values.firstWhere((s) => s.filePath == filePath);
-    } catch (_) {
-      return null;
-    }
+    return _pathIndex[filePath];
   }
 }

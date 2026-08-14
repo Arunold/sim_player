@@ -12,10 +12,11 @@ final playlistRepositoryProvider = Provider<PlaylistRepository>((ref) {
   return PlaylistRepository();
 });
 
-/// Audio Service Provider
 final audioServiceProvider = Provider<AudioService>((ref) {
   final songRepository = ref.watch(songRepositoryProvider);
-  return AudioService(songRepository);
+  final audioService = AudioService(songRepository);
+  ref.onDispose(() => audioService.dispose());
+  return audioService;
 });
 
 /// File Scanner Service Provider
