@@ -41,7 +41,7 @@ class SettingsValueNotifier<T> extends Notifier<T> {
 
   final String _key;
   final T _defaultValue;
-  late final Box _box;
+  late Box _box;
 
   @override
   T build() {
@@ -70,7 +70,7 @@ class SettingsValueNotifier<T> extends Notifier<T> {
 
 /// Theme mode notifier for managing app theme
 class ThemeModeNotifier extends Notifier<ThemeMode> {
-  late final Box _box;
+  late Box _box;
 
   @override
   ThemeMode build() {
@@ -154,7 +154,7 @@ final playbackSpeedProvider = NotifierProvider<SettingsValueNotifier<double>, do
 
 /// Music folders notifier for managing scan directories
 class MusicFoldersNotifier extends Notifier<List<String>> {
-  late final Box _box;
+  late Box _box;
 
   @override
   List<String> build() {

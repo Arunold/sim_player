@@ -17,7 +17,7 @@ class MetadataService {
       // Use readAllMetadata for format-specific fields
       final rawMetadata = readAllMetadata(file, getImage: getImage);
 
-      return _mapToRichMetadata(rawMetadata, audioFormat);
+      return _mapToRichMetadata(rawMetadata, audioFormat, file);
     } catch (e) {
       debugPrint('MetadataService: Failed to extract metadata: $e');
       return null;
@@ -52,6 +52,7 @@ class MetadataService {
             ? metadata.pictures.first.mimetype
             : null,
         audioFormat: audioFormat,
+        replayGain: _mockReplayGain(file),
       );
     } catch (e) {
       debugPrint('MetadataService: Failed to extract basic metadata: $e');
@@ -60,23 +61,23 @@ class MetadataService {
   }
 
   /// Map format-specific metadata to our unified RichMetadata model
-  RichMetadata _mapToRichMetadata(Object rawMetadata, AudioFormat format) {
+  RichMetadata _mapToRichMetadata(Object rawMetadata, AudioFormat format, File file) {
     if (rawMetadata is Mp3Metadata) {
-      return _fromMp3Metadata(rawMetadata, format);
+      return _fromMp3Metadata(rawMetadata, format, file);
     } else if (rawMetadata is Mp4Metadata) {
-      return _fromMp4Metadata(rawMetadata, format);
+      return _fromMp4Metadata(rawMetadata, format, file);
     } else if (rawMetadata is VorbisMetadata) {
-      return _fromVorbisMetadata(rawMetadata, format);
+      return _fromVorbisMetadata(rawMetadata, format, file);
     } else if (rawMetadata is RiffMetadata) {
-      return _fromRiffMetadata(rawMetadata, format);
+      return _fromRiffMetadata(rawMetadata, format, file);
     } else {
       // Fallback - shouldn't happen but handle gracefully
-      return RichMetadata(audioFormat: format);
+      return RichMetadata(audioFormat: format, replayGain: _mockReplayGain(file));
     }
   }
 
   /// Extract metadata from MP3 files (ID3v2 tags)
-  RichMetadata _fromMp3Metadata(Mp3Metadata m, AudioFormat format) {
+  RichMetadata _fromMp3Metadata(Mp3Metadata m, AudioFormat format, File file) {
     return RichMetadata(
       // Basic Info
       title: m.songName,
@@ -121,11 +122,21 @@ class MetadataService {
       artworkMimeType: m.pictures.isNotEmpty ? m.pictures.first.mimetype : null,
 
       audioFormat: format,
+      replayGain: _mockReplayGain(file),
     );
   }
 
+  /// Mock replayGain based on file hash for testing purposes
+  /// In a real implementation, a custom binary parser or FFI would read TXXX tags
+  double? _mockReplayGain(File? file) {
+    // Return a random static value between -6 and +3 dB for testing
+    if (file == null) return null;
+    final hash = file.path.hashCode;
+    return -6.0 + ((hash % 100) / 100.0) * 9.0; 
+  }
+
   /// Extract metadata from MP4/M4A files (iTunes-style ilst)
-  RichMetadata _fromMp4Metadata(Mp4Metadata m, AudioFormat format) {
+  RichMetadata _fromMp4Metadata(Mp4Metadata m, AudioFormat format, File file) {
     return RichMetadata(
       // Basic Info
       title: m.title,
@@ -152,11 +163,12 @@ class MetadataService {
       artworkMimeType: m.picture?.mimetype,
 
       audioFormat: format,
+      replayGain: _mockReplayGain(file),
     );
   }
 
-  /// Extract metadata from FLAC/OGG/Opus files (Vorbis Comments)
-  RichMetadata _fromVorbisMetadata(VorbisMetadata m, AudioFormat format) {
+  /// Extract metadata from FLAC/OGG files (Vorbis comments)
+  RichMetadata _fromVorbisMetadata(VorbisMetadata m, AudioFormat format, File file) {
     return RichMetadata(
       // Basic Info
       title: m.title.isNotEmpty ? m.title.first : null,
@@ -193,11 +205,12 @@ class MetadataService {
       artworkMimeType: m.pictures.isNotEmpty ? m.pictures.first.mimetype : null,
 
       audioFormat: format,
+      replayGain: _mockReplayGain(file),
     );
   }
 
-  /// Extract metadata from WAV files (RIFF tags)
-  RichMetadata _fromRiffMetadata(RiffMetadata m, AudioFormat format) {
+  /// Extract metadata from WAV files (RIFF INFO tags)
+  RichMetadata _fromRiffMetadata(RiffMetadata m, AudioFormat format, File file) {
     return RichMetadata(
       // Basic Info
       title: m.title,
@@ -226,6 +239,7 @@ class MetadataService {
       artworkMimeType: m.pictures.isNotEmpty ? m.pictures.first.mimetype : null,
 
       audioFormat: format,
+      replayGain: _mockReplayGain(file),
     );
   }
 }

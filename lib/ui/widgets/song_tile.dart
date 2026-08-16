@@ -68,7 +68,9 @@ class SongTile extends ConsumerWidget {
   }
 
   Widget _buildLeading(BuildContext context, bool isSelected, bool isPlaying, bool showTrackNumbers) {
-    if (showTrackNumbers && trackNumber != null) {
+    final effectiveTrackNumber = trackNumber ?? song.trackNumber;
+    
+    if (showTrackNumbers && effectiveTrackNumber != null) {
       return SizedBox(
         width: 60,
         height: 60,
@@ -85,7 +87,7 @@ class SongTile extends ConsumerWidget {
                         paused: !isPlaying,
                       )
                     : Text(
-                        trackNumber.toString(),
+                        effectiveTrackNumber.toString(),
                         style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                           color: context.colors.textSecondary,
                           fontWeight: FontWeight.w500,

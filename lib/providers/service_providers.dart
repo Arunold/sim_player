@@ -1,3 +1,4 @@
+import 'package:audio_service/audio_service.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../data/repositories/repositories.dart';
 import '../services/services.dart';
@@ -12,11 +13,16 @@ final playlistRepositoryProvider = Provider<PlaylistRepository>((ref) {
   return PlaylistRepository();
 });
 
-final audioServiceProvider = Provider<AudioService>((ref) {
-  final songRepository = ref.watch(songRepositoryProvider);
-  final audioService = AudioService(songRepository);
-  ref.onDispose(() => audioService.dispose());
-  return audioService;
+/// Audio Player Handler Provider
+///
+/// This must be overridden at ProviderScope level with the handler
+/// returned by [AudioService.init] in main(). The handler provides
+/// background playback and media notification controls.
+final audioPlayerHandlerProvider = Provider<AudioPlayerHandler>((ref) {
+  throw UnimplementedError(
+    'audioPlayerHandlerProvider must be overridden with the handler '
+    'returned by AudioService.init() in main().',
+  );
 });
 
 /// File Scanner Service Provider

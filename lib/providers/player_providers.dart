@@ -16,20 +16,20 @@ extension StartWithExtension<T> on Stream<T> {
 
 /// Current song provider - starts with current value then listens to stream
 final currentSongProvider = StreamProvider<Song?>((ref) {
-  final audioService = ref.watch(audioServiceProvider);
-  return audioService.currentSongStream.startWith(audioService.currentSong);
+  final handler = ref.watch(audioPlayerHandlerProvider);
+  return handler.currentSongStream.startWith(handler.currentSong);
 });
 
 /// Player state provider - starts with current value then listens to stream
 final playerStateProvider = StreamProvider<AppPlayerState>((ref) {
-  final audioService = ref.watch(audioServiceProvider);
-  return audioService.playerStateStream.startWith(audioService.playerState);
+  final handler = ref.watch(audioPlayerHandlerProvider);
+  return handler.playerStateStream.startWith(handler.playerState);
 });
 
 /// Playback queue provider - starts with current value then listens to stream
 final playbackQueueProvider = StreamProvider<PlaybackQueue>((ref) {
-  final audioService = ref.watch(audioServiceProvider);
-  return audioService.queueStream.startWith(audioService.queue);
+  final handler = ref.watch(audioPlayerHandlerProvider);
+  return handler.queueStream.startWith(handler.currentQueue);
 });
 
 /// Is playing provider (convenience)
@@ -82,41 +82,41 @@ final shuffleEnabledProvider = Provider<bool>((ref) {
   );
 });
 
-/// Audio service controller for UI actions
+/// Audio controller for UI actions — thin wrapper around AudioPlayerHandler
 class AudioController {
-  final AudioService _audioService;
+  final AudioPlayerHandler _handler;
 
-  AudioController(this._audioService);
+  AudioController(this._handler);
 
-  Future<void> play() => _audioService.play();
-  Future<void> pause() => _audioService.pause();
-  Future<void> togglePlayPause() => _audioService.togglePlayPause();
-  Future<void> stop() => _audioService.stop();
-  Future<void> seek(Duration position) => _audioService.seek(position);
-  Future<void> seekForward([int seconds = 10]) => _audioService.seekForward(seconds);
-  Future<void> seekBackward([int seconds = 10]) => _audioService.seekBackward(seconds);
-  Future<void> skipToNext() => _audioService.skipToNext();
-  Future<void> skipToPrevious() => _audioService.skipToPrevious();
-  Future<void> setVolume(double volume) => _audioService.setVolume(volume);
-  Future<void> setSpeed(double speed) => _audioService.setSpeed(speed);
-  Future<void> setSkipSilence(bool enabled) => _audioService.setSkipSilence(enabled);
-  void setFadeOnPausePlay(bool enabled) => _audioService.setFadeOnPausePlay(enabled);
-  void setRepeatMode(RepeatMode mode) => _audioService.setRepeatMode(mode);
-  void cycleRepeatMode() => _audioService.cycleRepeatMode();
-  Future<void> toggleShuffle() => _audioService.toggleShuffle();
-  Future<void> playSong(Song song) => _audioService.playSong(song);
+  Future<void> play() => _handler.play();
+  Future<void> pause() => _handler.pause();
+  Future<void> togglePlayPause() => _handler.togglePlayPause();
+  Future<void> stop() => _handler.stop();
+  Future<void> seek(Duration position) => _handler.seek(position);
+  Future<void> seekForward([int seconds = 10]) => _handler.fastForward(seconds);
+  Future<void> seekBackward([int seconds = 10]) => _handler.rewind(seconds);
+  Future<void> skipToNext() => _handler.skipToNext();
+  Future<void> skipToPrevious() => _handler.skipToPrevious();
+  Future<void> setVolume(double volume) => _handler.setVolume(volume);
+  Future<void> setSpeed(double speed) => _handler.setSpeed(speed);
+  Future<void> setSkipSilence(bool enabled) => _handler.setSkipSilence(enabled);
+  void setFadeOnPausePlay(bool enabled) => _handler.setFadeOnPausePlay(enabled);
+  void setRepeatMode(RepeatMode mode) => _handler.setAppRepeatMode(mode);
+  void cycleRepeatMode() => _handler.cycleRepeatMode();
+  Future<void> toggleShuffle() => _handler.toggleShuffle();
+  Future<void> playSong(Song song) => _handler.playSong(song);
   Future<void> playSongs(List<Song> songs, {int startIndex = 0}) =>
-      _audioService.playSongs(songs, startIndex: startIndex);
-  Future<void> addToQueue(Song song) => _audioService.addToQueue(song);
-  Future<void> addToQueueNext(Song song) => _audioService.addToQueueNext(song);
-  Future<void> playFromQueue(int index) => _audioService.playFromQueue(index);
-  Future<void> removeFromQueue(int index) => _audioService.removeFromQueue(index);
-  Future<void> clearQueue() => _audioService.clearQueue();
+      _handler.playSongs(songs, startIndex: startIndex);
+  Future<void> addToQueue(Song song) => _handler.addToQueue(song);
+  Future<void> addToQueueNext(Song song) => _handler.addToQueueNext(song);
+  Future<void> playFromQueue(int index) => _handler.playFromQueue(index);
+  Future<void> removeFromQueue(int index) => _handler.removeFromQueue(index);
+  Future<void> clearQueue() => _handler.clearQueue();
   Future<void> reorderQueue(int oldIndex, int newIndex) =>
-      _audioService.reorderQueue(oldIndex, newIndex);
+      _handler.reorderQueue(oldIndex, newIndex);
 }
 
 final audioControllerProvider = Provider<AudioController>((ref) {
-  final audioService = ref.watch(audioServiceProvider);
-  return AudioController(audioService);
+  final handler = ref.watch(audioPlayerHandlerProvider);
+  return AudioController(handler);
 });

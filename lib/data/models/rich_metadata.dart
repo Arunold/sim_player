@@ -40,6 +40,7 @@ class RichMetadata {
   final String? originalAlbum;
   final int? originalYear;
   final String? isrc;
+  final double? replayGain;
 
   // Artwork
   final Uint8List? artworkBytes;
@@ -79,6 +80,7 @@ class RichMetadata {
     this.originalAlbum,
     this.originalYear,
     this.isrc,
+    this.replayGain,
     this.artworkBytes,
     this.artworkMimeType,
     this.audioFormat = AudioFormat.unknown,

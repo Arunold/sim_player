@@ -42,6 +42,7 @@ dependencies:
   collection: ^1.18.0
   intl: ^0.20.2
   equatable: ^2.0.5
+  audiotags: ^1.4.5
 
 dev_dependencies:
   flutter_test:

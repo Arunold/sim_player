@@ -47,6 +47,8 @@ class PlaybackQueue extends Equatable {
 
   bool get isEmpty => songIds.isEmpty;
 
+  bool get isNotEmpty => songIds.isNotEmpty;
+
   PlaybackQueue moveToNext() {
     if (!hasNext) return this;
     return copyWith(currentIndex: currentIndex + 1);

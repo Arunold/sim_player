@@ -6,6 +6,8 @@ import '../../core/constants/theme_constants.dart';
 import '../../data/models/models.dart';
 import '../../providers/providers.dart';
 import '../widgets/song_metadata_sheet.dart';
+import '../widgets/song_options_menu.dart';
+import '../../services/sleep_timer_service.dart';
 import 'queue_screen.dart';
 
 /// Full-screen now playing screen
@@ -54,6 +56,8 @@ class NowPlayingScreen extends ConsumerWidget {
     AppPlayerState playerState,
     AudioController audioController,
   ) {
+    final sleepTimer = ref.watch(sleepTimerProvider);
+
     return Stack(
       fit: StackFit.expand,
       children: [
@@ -107,6 +111,22 @@ class NowPlayingScreen extends ConsumerWidget {
                     else
                       const SizedBox(width: 48), // Placeholder for alignment
                     const Spacer(),
+                    // Sleep Timer
+                    if (sleepTimer.isActive)
+                      ActionChip(
+                        backgroundColor: context.colors.primary.withValues(alpha: 0.2),
+                        side: BorderSide.none,
+                        label: Text(
+                          '${sleepTimer.remainingTime!.inMinutes}:${(sleepTimer.remainingTime!.inSeconds % 60).toString().padLeft(2, '0')}',
+                          style: TextStyle(color: context.colors.primary),
+                        ),
+                        onPressed: () => _showSleepTimerDialog(context, ref),
+                      )
+                    else
+                      IconButton(
+                        icon: const Icon(Icons.timer_outlined),
+                        onPressed: () => _showSleepTimerDialog(context, ref),
+                      ),
                     // More options
                     IconButton(
                       icon: const Icon(Icons.more_vert_rounded),
@@ -408,64 +428,56 @@ class NowPlayingScreen extends ConsumerWidget {
   }
 
   void _showOptionsMenu(BuildContext context, WidgetRef ref, Song song) {
-    final audioController = ref.read(audioControllerProvider);
-
     showModalBottomSheet(
       context: context,
-      builder: (context) => SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            ListTile(
-              leading: const Icon(Icons.playlist_add_rounded),
-              title: const Text('Add to queue'),
-              onTap: () {
-                Navigator.pop(context);
-                audioController.addToQueue(song);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Added to queue'),
-                    duration: Duration(seconds: 1),
-                  ),
-                );
-              },
-            ),
-            ListTile(
-              leading: Icon(
-                song.isFavorite
-                    ? Icons.favorite_rounded
-                    : Icons.favorite_border_rounded,
-                color: song.isFavorite ? context.colors.error : null,
-              ),
-              title: Text(
-                song.isFavorite ? 'Remove from favorites' : 'Add to favorites',
-              ),
-              onTap: () {
-                Navigator.pop(context);
-                ref.read(songsProvider.notifier).toggleFavorite(song.id);
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.queue_music_rounded),
-              title: const Text('Add to playlist'),
-              onTap: () {
-                Navigator.pop(context);
-                _showAddToPlaylistDialog(context, ref, song);
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.info_outline_rounded),
-              title: const Text('Song info'),
-              onTap: () {
-                Navigator.pop(context);
-                SongMetadataSheet.show(context, song);
-              },
-            ),
-          ],
-        ),
-      ),
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => SongOptionsMenu(song: song),
     );
   }
+
+  void _showSleepTimerDialog(BuildContext context, WidgetRef ref) {
+    final timerService = ref.read(sleepTimerProvider.notifier);
+    
+    showModalBottomSheet(
+      context: context,
+      builder: (context) {
+        return SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Padding(
+                padding: const EdgeInsets.all(ThemeConstants.spacingLg),
+                child: Text(
+                  'Sleep Timer',
+                  style: Theme.of(context).textTheme.titleLarge,
+                ),
+              ),
+              ListTile(
+                leading: const Icon(Icons.timer_off),
+                title: const Text('Off'),
+                onTap: () {
+                  timerService.cancel();
+                  Navigator.pop(context);
+                },
+              ),
+              for (final mins in [15, 30, 45, 60, 90])
+                ListTile(
+                  leading: const Icon(Icons.timer),
+                  title: Text('$mins minutes'),
+                  onTap: () {
+                    timerService.start(Duration(minutes: mins));
+                    Navigator.pop(context);
+                  },
+                ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+
 
   void _showAddToPlaylistDialog(
     BuildContext context,

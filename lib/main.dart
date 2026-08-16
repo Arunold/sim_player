@@ -1,13 +1,17 @@
+import 'package:audio_service/audio_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 
+import 'core/constants/app_constants.dart';
 import 'core/routes/app_routes.dart';
 import 'core/theme/app_theme.dart';
 import 'data/models/playlist.dart';
 import 'data/models/song.dart';
+import 'data/repositories/song_repository.dart';
 import 'providers/providers.dart';
+import 'services/audio_service.dart' as app;
 import 'ui/screens/screens.dart';
 import 'ui/shell/main_shell.dart';
 
@@ -41,7 +45,37 @@ Future<void> main() async {
   // Open settings box early for theme
   await Hive.openBox(SettingsKeys.boxName);
 
-  runApp(const ProviderScope(child: SimPlayerApp()));
+  // Initialize song repository early so the handler can access songs
+  final songRepository = SongRepository();
+  await songRepository.init();
+
+  // Initialize audio_service with our handler for background playback
+  // and media notification controls (lockscreen, notification shade).
+  final audioHandler = await AudioService.init(
+    builder: () => app.AudioPlayerHandler(songRepository),
+    config: const AudioServiceConfig(
+      androidNotificationChannelId:
+          '${AppConstants.appPackageName}.channel.audio',
+      androidNotificationChannelName: AppConstants.appName,
+      androidNotificationOngoing: true,
+      androidStopForegroundOnPause: true,
+      androidNotificationIcon: 'mipmap/ic_launcher',
+    ),
+  );
+
+  // Run handler's own init (queue restore, audio session, listeners)
+  await audioHandler.init();
+
+  runApp(
+    ProviderScope(
+      overrides: [
+        // Inject the already-initialized instances so they are shared
+        songRepositoryProvider.overrideWithValue(songRepository),
+        audioPlayerHandlerProvider.overrideWithValue(audioHandler),
+      ],
+      child: const SimPlayerApp(),
+    ),
+  );
 }
 
 class SimPlayerApp extends ConsumerStatefulWidget {
@@ -64,12 +98,8 @@ class _SimPlayerAppState extends ConsumerState<SimPlayerApp> {
 
   Future<void> _initializeApp() async {
     try {
-      // Initialize repositories
-      await ref.read(songRepositoryProvider).init();
+      // Initialize playlist repository
       await ref.read(playlistRepositoryProvider).init();
-
-      // Initialize audio service
-      await ref.read(audioServiceProvider).init();
 
       // Apply saved audio settings (safe now that Hive boxes are open)
       _applyAudioSettings();
@@ -89,28 +119,28 @@ class _SimPlayerAppState extends ConsumerState<SimPlayerApp> {
   }
   
   void _applyAudioSettings() {
-    final audioService = ref.read(audioServiceProvider);
+    final handler = ref.read(audioPlayerHandlerProvider);
     
     // Apply skip silence setting
     final skipSilence = ref.read(skipSilenceProvider);
-    audioService.setSkipSilence(skipSilence);
+    handler.setSkipSilence(skipSilence);
     
     // Apply playback speed setting
     final playbackSpeed = ref.read(playbackSpeedProvider);
-    audioService.setSpeed(playbackSpeed);
+    handler.setSpeed(playbackSpeed);
     
     // Apply fade on pause/play setting
     final fadeOnPausePlay = ref.read(fadeOnPausePlayProvider);
-    audioService.setFadeOnPausePlay(fadeOnPausePlay);
+    handler.setFadeOnPausePlay(fadeOnPausePlay);
     
     // Resume playback if enabled
     final resumeOnRestart = ref.read(resumeOnRestartProvider);
     if (resumeOnRestart) {
       // Check if there's a queue to resume
-      final queue = audioService.queue;
+      final queue = handler.currentQueue;
       if (queue.songIds.isNotEmpty && queue.currentSongId != null) {
         // Resume playback (not starting from beginning)
-        audioService.play();
+        handler.play();
       }
     }
   }

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../data/models/models.dart';
 import '../data/repositories/song_repository.dart';
 import 'service_providers.dart';
+import 'settings_providers.dart';
 
 /// Songs list provider
 final songsProvider =
@@ -14,14 +15,16 @@ class SongsNotifier extends Notifier<AsyncValue<List<Song>>> {
   @override
   AsyncValue<List<Song>> build() {
     _repository = ref.watch(songRepositoryProvider);
-    Future<void>.microtask(() => loadSongs());
+    final minDuration = ref.watch(minFileDurationProvider);
+    Future<void>.microtask(() => loadSongs(minDuration));
     return const AsyncValue.loading();
   }
 
-  Future<void> loadSongs() async {
+  Future<void> loadSongs(int minDuration) async {
     state = const AsyncValue.loading();
     try {
-      final songs = _repository.getAllSongs();
+      final allSongs = _repository.getAllSongs();
+      final songs = allSongs.where((s) => s.duration.inSeconds >= minDuration).toList();
       state = AsyncValue.data(songs);
     } catch (e, st) {
       state = AsyncValue.error(e, st);
@@ -29,7 +32,8 @@ class SongsNotifier extends Notifier<AsyncValue<List<Song>>> {
   }
 
   void refresh() {
-    Future<void>.microtask(() => loadSongs());
+    final minDuration = ref.read(minFileDurationProvider);
+    Future<void>.microtask(() => loadSongs(minDuration));
   }
 
   Future<void> toggleFavorite(String songId) async {

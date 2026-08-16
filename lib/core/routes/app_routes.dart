@@ -26,6 +26,7 @@ class AppRoutes {
     nowPlaying: () => const NowPlayingScreen(),
     settings: () => const SettingsScreen(),
     search: () => const SearchScreen(),
+    profile: () => const ProfileScreen(),
   };
 
   /// Route titles

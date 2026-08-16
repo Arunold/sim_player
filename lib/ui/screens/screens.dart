@@ -8,3 +8,4 @@ export 'settings_screen.dart';
 export 'splash_screen.dart';
 export 'songs_list_screen.dart';
 export 'browse_screen.dart';
+export 'profile_screen.dart';

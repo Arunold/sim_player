@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:sim_player/core/constants/app_constants.dart';
 import '../../core/constants/theme_constants.dart';
@@ -56,9 +57,14 @@ class _ShellWrapperState extends ConsumerState<ShellWrapper> {
       canPop: false,
       onPopInvokedWithResult: (didPop, result) async {
         if (didPop) return;
+        final navigator = Navigator.of(context);
+        if (navigator.canPop()) {
+          navigator.pop();
+          return;
+        }
         final shouldPop = await _onWillPop();
-        if (shouldPop && context.mounted) {
-          Navigator.of(context).pop();
+        if (shouldPop) {
+          await SystemChannels.platform.invokeMethod('SystemNavigator.pop');
         }
       },
       child: Scaffold(
@@ -151,11 +157,7 @@ class AppBarWidget extends StatelessWidget {
               IconButton(
                 icon: const Icon(Icons.person_outline_rounded),
                 onPressed: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Profile screen coming soon!'),
-                    ),
-                  );
+                  Navigator.pushNamed(context, AppRoutes.profile);
                 },
                 tooltip: 'Profile',
               ),

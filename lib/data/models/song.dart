@@ -59,6 +59,9 @@ class Song extends Equatable {
   @HiveField(17)
   final bool isFavorite;
 
+  @HiveField(18)
+  final double? replayGain;
+
   const Song({
     required this.id,
     required this.title,
@@ -78,6 +81,7 @@ class Song extends Equatable {
     this.lastPlayed,
     this.playCount = 0,
     this.isFavorite = false,
+    this.replayGain,
   });
 
   Song copyWith({
@@ -99,6 +103,7 @@ class Song extends Equatable {
     DateTime? lastPlayed,
     int? playCount,
     bool? isFavorite,
+    double? replayGain,
   }) {
     return Song(
       id: id ?? this.id,
@@ -119,6 +124,7 @@ class Song extends Equatable {
       lastPlayed: lastPlayed ?? this.lastPlayed,
       playCount: playCount ?? this.playCount,
       isFavorite: isFavorite ?? this.isFavorite,
+      replayGain: replayGain ?? this.replayGain,
     );
   }
 
@@ -154,6 +160,7 @@ class Song extends Equatable {
         lastPlayed,
         playCount,
         isFavorite,
+        replayGain,
       ];
 
   @override
